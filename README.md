@@ -20,3 +20,6 @@ A dark theme for [Duolingo](https://www.duolingo.com/).
 
    Go go to [Duolingo True Dark on the Stylish website](https://userstyles.org/styles/151083/duolingo-true-dark) and click on "Install style".
 
+6. You can edit the Tampermonkey or Greasemonkey script to change the brightness.
+
+   Look for "var brightness = 0.75;" within the script and slightly increase or decrease "0.75" to change the brightness. 1 = full brightness, 0.5 = 50 % darkened.
