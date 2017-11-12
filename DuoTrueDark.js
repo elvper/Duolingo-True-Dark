@@ -6,7 +6,7 @@
 // @author      elvper
 // ==/UserScript==
 
-var brightness = 0.5; // between 0 and 1, 1 is no adjustment while 0 is completely black.
+var brightness = 0.75; // between 0 and 1, 1 is no adjustment while 0 is completely black.
 
 var bodydiv = document.createElement('div');
 	bodydiv.id = 'TurnDownLights';
