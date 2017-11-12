@@ -13,10 +13,10 @@ A dark theme for [Duolingo](https://www.duolingo.com/).
 
 4. Instal Stylish
 
-- [Chrome](https://chrome.google.com/webstore/detail/stylish-custom-themes-for/fjnbnpbmkenffdnngjfgmeleoegfcffe)
-- [Firefox](https://addons.mozilla.org/en-US/firefox/addon/stylish/)
+   - [Chrome](https://chrome.google.com/webstore/detail/stylish-custom-themes-for/fjnbnpbmkenffdnngjfgmeleoegfcffe)
+   - [Firefox](https://addons.mozilla.org/en-US/firefox/addon/stylish/)
 
 5. Instal the Stylish CSS
 
-Go go to [Duolingo True Dark on the Stylish website](https://userstyles.org/styles/151083/duolingo-true-dark) and click on "Install style".
+   Go go to [Duolingo True Dark on the Stylish website](https://userstyles.org/styles/151083/duolingo-true-dark) and click on "Install style".
 
