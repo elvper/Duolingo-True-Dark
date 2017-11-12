@@ -7,7 +7,7 @@ A dark theme for [Duolingo](https://www.duolingo.com/).
    - Chrome: [Tampermonkey](https://chrome.google.com/webstore/detail/dhdgffkkebhmkfjojejmpbldmpobfkfo) extension
    - Firefox: [Greasemonkey](https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/) add-on
 
-2. Click [here](https://github.com/elvper/Duolingo-True-Dark/raw/master/DuoTrueDark.js) to install the userscript.
+2. Click [here](https://github.com/elvper/Duolingo-True-Dark/raw/master/DuoTrueDark.user.js) to install the userscript.
 
 3. Confirm the installation when prompted.
 
