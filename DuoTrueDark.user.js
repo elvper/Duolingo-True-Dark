@@ -1,11 +1,3 @@
-// ==UserScript==
-// @name        Duolingo True Dark
-// @description Turn off the lights on Duolingo
-// @include     https://www.duolingo.com/*
-// @version     1
-// @author      elvper
-// ==/UserScript==
-
 var bodydiv = document.createElement('div');
 	bodydiv.id = 'TurnDownLights';
 	document.getElementsByTagName('body')[0].appendChild(bodydiv);
