@@ -1,0 +1,47 @@
+{
+    "manifest_version": 2,
+    "name": "Duolingo True Dark",
+    "short_name": "DTD",
+    "description": "Unoffial dark theme for Duolingo",
+    "version": "1.0",
+	"author": "elvper",
+    "content_scripts": [
+        {
+            "js": [
+                "dark.js"
+            ],
+            "matches": [
+                "*://duolingo.com/*",
+				"*://*.duolingo.com/*"
+            ],
+            "run_at": "document_idle"
+        },
+		{
+		    "js": [
+                "noflicker.js"
+            ],
+            "matches": [
+                "*://duolingo.com/*",
+				"*://*.duolingo.com/*"
+            ],
+            "run_at": "document_start"
+		}
+    ],
+    "browser_action": {
+        "default_title": "Duolingo True Dark",
+        "default_icon": "icon.png",
+        "default_popup": "popup.html"
+    },
+    "permissions": [
+        "storage",
+        "*://duolingo.com/*",
+        "*://*.duolingo.com/*"
+    ],
+	"web_accessible_resources": [
+		"crown-small-black.svg",
+		"star-outlined-dark.svg",
+		"lightdark_slider.svg"
+	]
+}
+
+
