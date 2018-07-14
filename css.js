@@ -430,6 +430,11 @@ sheetCSS = 'body{background: black}' +
 '.claeN textarea' + // reply
 '{background:' + pc.innerbg + ';color:' + pc.text + '}' +
 
+	// new post
+'.Q3ue-._2yvtl.gFN2J,' + // title
+'.dVGCn _2yvtl gFN2J' + // content
+'{background:' + pc.innerbg + ';color:' + pc.text + '}' +
+
 // #################################################################
 // ############################ words tab ##########################
 // #################################################################
