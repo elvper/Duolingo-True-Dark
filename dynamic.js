@@ -327,8 +327,12 @@ function lightAdjust(as){
 		darkRatio = 1 - lightModifier(((sp4 - now) / dif2));
 	} else if (now > sp1 && now < sp2){
 		darkRatio = lightModifier(((sp2 - now) / dif1));
+	} else {
+		// error prevention
+		loopDelay = 99999999999;
 	};
 	loopDelay = loopDelay < 1000 ? 1000 : loopDelay;
+	loopDelay = loopDelay ? loopDelay : 1000;
 	lightTransition(darkRatio, as);
 	console.log("adjusting brightness, " + Math.round(darkRatio * 10000) / 100 + " % progression. Waiting " + loopDelay / 1000 + "s till next check");
 	if (adjustActive > 1){
