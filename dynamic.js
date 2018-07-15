@@ -8,56 +8,55 @@ var sunPosition = null;
 var storedSettings;
 
 (function constructHTML(){
-	// create overlay for darkening
-	var overlaydiv = document.createElement('div');
-		overlaydiv.id = 'TurnDownLights';
-	document.getElementsByTagName('body')[0].appendChild(overlaydiv);
+	var tempele = document.createElement("div");
+	tempele.id = "TrueDarkTheme";
+	var newele = {}, eleobjs = {};
+	toObj = arr => eleobjs[arr[1]] = {"type": arr[0], "id": arr[1], "class": arr[2], "parent": arr[3], "attr": arr[4], "inner": arr[5]};
+	appendEles = obj => eval(obj.parent).appendChild(newele[obj.id]);
 
-	// settings pop-up html
-	var settingsdiv = document.createElement('div');
-		settingsdiv.id = 'TrueDarkSettings';
+	function createEle(obj){
+		addAttributes = objattr => newele[obj.id].setAttribute(objattr[0], objattr[1]);
+		newele[obj.id] = document.createElement(obj.type);
+		newele[obj.id].id = obj.id;
+		newele[obj.id].className = obj.class;
+		newele[obj.id].appendChild(document.createTextNode(obj.inner));
+		obj.attr.forEach(addAttributes);
+	};
 
-	// cog icon settings
-	var cogdiv = document.createElement('div');
-		cogdiv.id = "TDcog";
-		cogdiv.className = "cCL9P";
-		cogdiv.setAttribute("onmouseover", "javascript:void(document.getElementById('TDpop').className=(''),hidePop())");
+	var tocreate = [
+		// type		// id					// class		// parent						// attributes, innertext
+		["div", 	"TurnDownLights", 		"", 			'tempele', 						[], ""],
+		["div", 	"TrueDarkSettings",		"", 			'tempele', 						[], ""],
+		["div", 	"TDcog", 				"cCL9P", 		'newele["TrueDarkSettings"]', 	[["onmouseover", "javascript:void(document.getElementById('TDpop').className=(''),hidePop())"]], ""],
+		["div", 	"TDpop", 				"hideEle", 		'newele["TrueDarkSettings"]', 	[], ""],
+		["div", 	"sessiontitle",			"popExpl",		'newele["TDpop"]',				[], "Session brightness"],
+		["input", 	"sessionDarknessValue", "dv",			'newele["TDpop"]',				[["type", "text"],["disabled", true]], ""],
+		["input", 	"sessionDarkness", 		"dslider adj",	'newele["TDpop"]',				[["type", "range"],["oninput", "updateDarkness(this)"],["min", "-70"],["max", "70"],["value", "0"]], ""],
+		["div", 	"daytitle",				"popExpl",		'newele["TDpop"]',				[], "Daytime brightness"],
+		["input", 	"dayDarknessValue", 	"dv",			'newele["TDpop"]',				[["type", "text"],["disabled", true]], ""],
+		["input", 	"dayDarkness", 			"dslider",		'newele["TDpop"]',				[["type", "range"],["oninput", "updateDarkness(this)"],["min", "0"],["max", "70"],["value", "0"]], ""],
+		["hr", 		"popsplit", 			"popSplit", 	'newele["TDpop"]', 				[], ""],
+		["div", 	"locationtitle",		"popExpl",		'newele["TDpop"]',				[], "Location for dynamic brightness"],
+		["div", 	"locationcontainer",	"locContainer",	'newele["TDpop"]',				[], ""],
+		["div", 	"poplatref",			"popRef",		'newele["locationcontainer"]',	[], "Lat "],
+		["input", 	"latitudeDarkness",		"geoLoc",		'newele["locationcontainer"]',	[["type", "text"],["oninput", "updateDarkness(this)"]], ""],
+		["div", 	"poplongref",			"popRef",		'newele["locationcontainer"]',	[], "Long "],
+		["input", 	"longitudeDarkness",	"geoLoc",		'newele["locationcontainer"]',	[["type", "text"],["oninput", "updateDarkness(this)"]], ""],
+		["div", 	"locationcheck",		"locContainer",	'newele["TDpop"]',				[], ""],
+		["input", 	"locationBasedDarkness","popCheck",		'newele["locationcheck"]',		[["type", "checkbox"],["oninput", "updateDarkness(this)"]], ""],
+		["label", 	"locationchecklabel"	,"",			'newele["locationcheck"]',		[["for", "locationBasedDarkness"]], "Enable dynamic day-night brightness?"],
+		["div", 	"nighttitle",			"popExpl",		'newele["TDpop"]',				[], "Nighttime brightness"],
+		["input", 	"nightDarknessValue", 	"dv",			'newele["TDpop"]',				[["type", "text"],["disabled", true]], ""],
+		["input", 	"nightDarkness", 		"dslider",		'newele["TDpop"]',				[["type", "range"],["oninput", "updateDarkness(this)"],["min", "0"],["max", "70"],["value", "0"]], ""]
+	];
+	tocreate.forEach(toObj);
 
-	// settings popup window
-	var popdiv = document.createElement('div');
-		popdiv.id = "TDpop";
-		popdiv.className = "hideEle";
-		popdiv.innerHTML = '<div class="popExpl">Session brightness</div>' +
-		'<input type="text" id="sessionDarknessValue" class="dv" disabled>' +
-		'<input id="sessionDarkness" oninput="updateDarkness(this)" type="range" min="-70" max="70" value="0" class="dslider adj">' +
-		
-		'<div class="popExpl">Daytime brightness</div>' +
-		'<input type="text" id="dayDarknessValue" class="dv" disabled>' +
-		'<input id="dayDarkness" oninput="updateDarkness(this)" type="range" min="0" max="70" value="0" class="dslider">' +
-		
-		'<hr class="popSplit">' +
-		
-		'<div class="popExpl">Location for dynamic brightness</div>' +
-		'<div class="locContainer">' +
-		'<div class="popRef">Lat </div>' +
-		'<input id="latitudeDarkness" type="text" class="geoLoc" oninput="updateDarkness(this)">' +
-		'<div class="popRef">Long </div>' +
-		'<input id="longitudeDarkness" type="text" class="geoLoc" oninput="updateDarkness(this)">' +
-		'</div>' +
-		
-		'<div class="locContainer">' +
-		'<input type="checkbox" class="popCheck" id="locationBasedDarkness" oninput="updateDarkness(this)">' +
-		'<label for="locationBasedDarkness">Enable dynamic day-night brightness?</label>' +
-		'</div>' +
-		
-		'<div class="popExpl">Nighttime brightness</div>' +
-		'<input type="text" id="nightDarknessValue" class="dv" disabled>' +
-		'<input id="nightDarkness" oninput="updateDarkness(this)" type="range" min="0" max="70" value="0" class="dslider">';
-		
-	// add settings html to the page
-	settingsdiv.appendChild(cogdiv);
-	settingsdiv.appendChild(popdiv);
-	document.body.appendChild(settingsdiv);
+	for (var key in eleobjs) {
+		createEle(eleobjs[key]);
+		appendEles(eleobjs[key]);
+	};
+
+	document.body.appendChild(tempele);
 })();
 
 // return to normal settings after change
