@@ -8,9 +8,6 @@
 var remembersession = 6; // hours: how long to remember session settings for
 var fadeearlier = 0.5; // hours: how long before sunset start to start fading to the night setting
 
-var goBack;
-var storedSettings;
-
 var td = {};
 
 td.version = "2.0.0";
@@ -250,7 +247,7 @@ function recalcobj(){
 	// add element functions to the page
 	var scriptEle = document.createElement('script');
 		scriptEle.type = "text/javascript";
-		scriptEle.appendChild(document.createTextNode(hidePop + updateDarkness + storeSettings + "var newSetting = {};newSetting.session = null;newSetting.sessionLast = null;newSetting.day = null;newSetting.night = null;newSetting.latitude = null;newSetting.longitude = null;newSetting.locationBased = null;var popOpen = 0;var goBack;var updateSettings;"));
+		scriptEle.appendChild(document.createTextNode(hidePop + updateDarkness + storeSettings + "var newSetting = {};newSetting.session = null;newSetting.sessionLast = null;newSetting.day = null;newSetting.night = null;newSetting.latitude = null;newSetting.longitude = null;newSetting.locationBased = null;var popOpen = 0;var goBack;var updateSettings;var storedSettings;"));
 	document.getElementsByTagName('head')[0].appendChild(scriptEle);
 })();
 
