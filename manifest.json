@@ -3,7 +3,7 @@
     "name": "Duolingo True Dark",
     "short_name": "DTD",
     "description": "Unoffial dark theme for Duolingo",
-    "version": "1.1.6",
+    "version": "2.0.0",
 	"author": "elvper",
     "content_scripts": [
         {

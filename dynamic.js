@@ -2,10 +2,58 @@
 // - dropdown profile stories
 // - keep wrong color in stories
 // - cog icon for pages without the resource
+// - handle next day - get new sun position
+
+// settings
+var remembersession = 6; // hours: how long to remember session settings for
+var fadeearlier = 0.5; // hours: how long before sunset start to start fading to the night setting
 
 var goBack;
-var sunPosition = null;
 var storedSettings;
+
+var td = {};
+
+td.version = "2.0.0";
+td.f = {};
+td.f.hourstojstime = hours => hours * 3600000;
+td.f.sessionadjustment = orignal => td.sessionexpired ?
+	orignal + td.settings.old.session : original;
+td.f.setoverlayopacity = opacity => document.getElementById("TurnDownLights").setAttribute("style", "background-color: rgba(0, 0, 0, " + opacity + ");");
+td.f.calclightratio = x => (((10 * x) - 5) / (4 + (12 * Math.abs(x - 0.5))) + 0.5);
+td.transitionprogress = (late, early) => ((late - td.now) / (late - early));
+
+function createobj(){
+	td.settings = {};
+	td.settings.old = JSON.parse(localStorage.getItem('TrueDarkSettings')) || {};
+	td.now = new Date().getTime();
+	td.tomorrow = td.now + 86400000;
+	td.sessionlimit = td.f.hourstojstime(remembersession);
+	td.sessionexpired = td.settings.old.sessionLast ?
+		td.now - td.settings.old.sessionLast < td.sessionlimit : true;
+	td.overlayopacity = {};
+	td.overlayopacity.day = td.f.sessionadjustment(td.settings.old.day) / 100;
+	td.overlayopacity.night = td.f.sessionadjustment(td.settings.old.day) / 100;
+	td.settings.old.scale = td.settings.old.night - td.settings.old.day;
+};
+createobj();
+
+function continueobj(){
+	td.doadjust = td.settings.old.locationBased && td.settings.old.latitude != null && td.settings.old.longitude != null;
+	td.sunposition = td.doadjust ?
+		SunCalc.getTimes(td.now, td.settings.old.latitude, td.settings.old.longitude) : null;
+	td.sunposition && (td.sunposition.startearlier = td.sunposition.sunsetStart - td.f.hourstojstime(fadeearlier));
+};
+
+function readFirst(){
+	continueobj();
+	loopfunctions();
+};
+
+function recalcobj(){
+	createobj();
+	continueobj();
+	console.log(td);
+}
 
 (function constructHTML(){
 	var tempele = document.createElement("div");
@@ -25,7 +73,7 @@ var storedSettings;
 
 	var tocreate = [
 		// type		// id					// class		// parent						// attributes, innertext
-		["div", 	"TurnDownLights", 		"", 			'tempele', 						[], ""],
+		["div", 	"TurnDownLights", 		"", 			'tempele', 						[["style", "background-color: rgba(0, 0, 0, " + td.overlayopacity.day + ");"]], ""],
 		["div", 	"TrueDarkSettings",		"", 			'tempele', 						[], ""],
 		["div", 	"TDcog", 				"cCL9P", 		'newele["TrueDarkSettings"]', 	[["onmouseover", "javascript:void(document.getElementById('TDpop').className=(''),hidePop())"]], ""],
 		["div", 	"TDpop", 				"hideEle", 		'newele["TrueDarkSettings"]', 	[], ""],
@@ -47,7 +95,8 @@ var storedSettings;
 		["label", 	"locationchecklabel"	,"",			'newele["locationcheck"]',		[["for", "locationBasedDarkness"]], "Enable dynamic day-night brightness?"],
 		["div", 	"nighttitle",			"popExpl",		'newele["TDpop"]',				[], "Nighttime brightness"],
 		["input", 	"nightDarknessValue", 	"dv",			'newele["TDpop"]',				[["type", "text"],["disabled", true]], ""],
-		["input", 	"nightDarkness", 		"dslider",		'newele["TDpop"]',				[["type", "range"],["oninput", "updateDarkness(this)"],["min", "0"],["max", "70"],["value", "0"]], ""]
+		["input", 	"nightDarkness", 		"dslider",		'newele["TDpop"]',				[["type", "range"],["oninput", "updateDarkness(this)"],["min", "0"],["max", "70"],["value", "0"]], ""],
+		["div", 	"tdversion",			"popExpl",		'newele["TDpop"]',				[], ("Version: " + td.version)],
 	];
 	tocreate.forEach(toObj);
 
@@ -59,19 +108,6 @@ var storedSettings;
 	document.body.appendChild(tempele);
 })();
 
-// return to normal settings after change
-for (var i = 0; i < 3; i++) {
-	document.getElementsByClassName("dslider")[i].addEventListener('mouseup', function() {
-		// cancel previous call
-		clearTimeout(goBack);
-		
-		// go back from preview to apply settings
-		goBack = setTimeout(function(){
-			initiateFuncs();
-		}, 2000);
-	});
-};
-
 // add the necessary functions to the page
 (function elementFuncs(){
 	// update settings to changes
@@ -80,11 +116,8 @@ for (var i = 0; i < 3; i++) {
 		updateSettings = setTimeout(function(){
 			storeSettings();
 		}, 2000);
-		var sliders = document.getElementsByClassName("dslider"),
-			applyNight = document.getElementById("locationBasedDarkness").checked;
-			sessionVal = parseInt(sliders[0].value),
-			dayVal = parseInt(sliders[1].value),
-			nightVal = parseInt(sliders[2].value),
+		var dayVal = parseInt(document.getElementById("dayDarkness").value),
+			nightVal = parseInt(document.getElementById("nightDarkness").value),
 			[largeVal, smallVal] = dayVal > nightVal ?
 				[dayVal, dayVal] : [nightVal, dayVal];
 		if (ele.className == "dslider"){
@@ -92,11 +125,19 @@ for (var i = 0; i < 3; i++) {
 			document.getElementById("TurnDownLights").setAttribute("style", "background-color: rgba(0, 0, 0, " + (parseInt(ele.value) / 100) + ");");
 				
 			// set session adjustment range
-			sliders[0].setAttribute("min", 0 - largeVal);
-			sliders[0].setAttribute("max", 70 - smallVal);
-			sliders[0].value = 0;
-			document.getElementById(sliders[0].id + "Value").value = 0;
+			var sessionslider = document.getElementById("sessionDarkness");
+			sessionslider.setAttribute("min", 0 - largeVal);
+			sessionslider.setAttribute("max", 70 - smallVal);
+			sessionslider.value = 0;
+			document.getElementById("sessionDarknessValue").value = 0;
 			newSetting.session = 0;
+			if (ele.id == "dayDarkness"){
+				document.getElementById("nightDarkness").setAttribute("min", ele.value);
+				if (!(nightVal >= dayVal)){
+					document.getElementById("nightDarknessValue").value = (100 - parseInt(ele.value)) + "%";
+					newSetting.night = parseInt(ele.value);
+				};
+			};
 		};
 		if (ele.id == "locationBasedDarkness"){
 			newSetting[ele.id.replace("Darkness", "")] = ele.checked;
@@ -106,11 +147,11 @@ for (var i = 0; i < 3; i++) {
 		if (ele.id == "sessionDarkness"){
 			var eleVal = parseInt(ele.value) < 0 ? "+" + (-parseInt(ele.value)) : (-parseInt(ele.value));
 			document.getElementById(ele.id + "Value").value = eleVal;
-			document.getElementById("TurnDownLights").setAttribute("style", "background-color: rgba(0, 0, 0, " + ((dayVal + sessionVal) / 100) + ");");
+			document.getElementById("TurnDownLights").setAttribute("style", "background-color: rgba(0, 0, 0, " + ((dayVal + parseInt(ele.value)) / 100) + ");");
 			newSetting.sessionLast = new Date() - 0;
 		};
 	};
-
+		
 	// hide the settings menu
 	function hidePop(){
 		if (popOpen == 0){
@@ -215,28 +256,14 @@ for (var i = 0; i < 3; i++) {
 
 // get stored settings
 function initiateFuncs(){
-	try {
-		var interSS = JSON.parse(localStorage.getItem('TrueDarkSettings'));
-		storedSettings = interSS ?
-			interSS : {};
-		interSS ?
-			applySettings(storedSettings) : null;
-	} catch(err) {};
-}
+	td.settings.old ?
+		td.f.applySettings(td.settings.old) : null;
+};
 
 // apply stored settings
-function applySettings(as){
+td.f.applySettings = (function(){
+	var as = td.settings.old;
 	var lightAdj = false;
-	var dateNow = new Date() - 0;
-	function setOverlay(){
-		var applyAdj;
-		if (dateNow - as.sessionLast < 21600000){
-			applyAdj = (as.day + as.session) / 100;
-		} else {
-			applyAdj = as.day / 100;
-		};
-		document.getElementById("TurnDownLights").setAttribute("style", "background-color: rgba(0, 0, 0, " + applyAdj + ");");
-	};
 	document.getElementById("sessionDarknessValue").value = as.session < 0 ? "+" + (0 - as.session) : (0 - as.session);
 	document.getElementById("sessionDarkness").value = as.session;
 	document.getElementById("sessionDarkness").setAttribute("min", 0 - (as.day > as.night ? as.day : as.night));
@@ -248,112 +275,71 @@ function applySettings(as){
 	document.getElementById("latitudeDarkness").value = as.latitude;
 	document.getElementById("longitudeDarkness").value = as.longitude;
 	document.getElementById("locationBasedDarkness").checked = as.locationBased ? true : false;
-	setOverlay();
-		
-	sunPosition = sunPosition != null ?
-		sunPosition : as.locationBased == true ?
-			SunCalc.getTimes(new Date(), as.latitude, as.longitude) : null;
-	
-	sunPosition ?
-		adjustActive ?
-			null : lightAdj = true :
-		null;
-		
-	console.log(sunPosition);
-		
-	if (lightAdj){
-		console.log("cancelled timeout");
-		clearTimeout(adjTimeout);
-		lightAdjust(as);
+});
+
+// add the svg radial definitions
+td.f.checkSVG = function(){
+	if (!document.getElementById("goldRadial") && document.getElementsByClassName("_2xGPj").length > 0){
+		document.getElementsByClassName("_2xGPj")[0].getElementsByTagName("defs")[0].innerHTML += '<radialGradient id="goldRadial" cx="50" cy="50" r="50" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="rgb(255,176,84)"></stop><stop offset="80%" stop-color="rgb(255,176,84)"></stop><stop offset="85%" stop-color="rgb(50,50,50)"></stop><stop offset="95%" stop-color="rgb(50,50,50)"></stop><stop offset="100%" stop-color="rgb(255,176,84)"></stop></radialGradient><radialGradient id="grayRadial" cx="50" cy="50" r="50" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="rgb(75,75,75)"></stop><stop offset="90%" stop-color="rgb(75,75,75)"></stop><stop offset="100%" stop-color="rgb(90,90,90)"></stop></radialGradient>';
 	};
+};
+
+function loopfunctions(){
+	td.now = new Date().getTime();
+	td.f.checkSVG();
+	toLast();
+	var pophidden = document.getElementById("TDpop").className == "hideEle";
+	td.popchange = pophidden != td.pophidden;
+	td.popchange && (recalcobj());
+	if ((td.doadjust && pophidden) || td.popchange){
+		td.currentratio = lightAdjust();
+	};
+	td.pophidden = document.getElementById("TDpop").className == "hideEle";
+	
+	setTimeout(function(){
+		loopfunctions();
+	}, 1000);
+};
+
+function calcbrightness(){
+	if (!td.doadjust){
+		darkRatio = 0;
+	} else if (td.now > td.sunposition.sunriseEnd && td.now < td.sunposition.startearlier){
+		darkRatio = 0;
+	} else if (td.now > td.sunposition.dusk || td.now < td.sunposition.dawn){
+		darkRatio = 1;
+	} else if (td.now > td.sunposition.startearlier && td.now < td.sunposition.dusk){
+		darkRatio = 1 - td.f.calclightratio(td.transitionprogress(td.sunposition.dusk, td.sunposition.startearlier));
+	} else if (td.now > td.sunposition.dawn && td.now < td.sunposition.sunriseEnd){
+		darkRatio = td.f.calclightratio(td.transitionprogress(td.sunposition.sunriseEnd, td.sunposition.dawn));
+	};
+	return darkRatio;
+};
+
+// ask pos x and y.
+function lightAdjust(){
+	var darkRatio = calcbrightness();
+	lightTransition(darkRatio);
+	return darkRatio;
 };
 
 // apply ratio
-function lightTransition(darkRatio, as){
-	var darkRef;
-	darkRef = (new Date().getTime() - as.sessionLast) < 21600000 ?
-		(as.day + as.session) : as.day;
-	if (as.night > as.day){
-		var darkScale = as.night - as.day,
-			newAdj = (darkRef + (darkScale * darkRatio))  / 100;
+function lightTransition(darkRatio){
+	if (darkRatio != td.currentratio || td.popchange){
+		var newAdj = (td.overlayopacity.day + ((td.settings.old.scale * darkRatio) / 100));
 		if (newAdj > 0.7) newAdj = 0.7;
-		document.getElementById("TurnDownLights").setAttribute("style", "background-color: rgba(0, 0, 0, " + newAdj + ");");
-	};
-};
-
-// add the svg radial definitions
-(function checkSVG(){
-	var loopDelay = 1000;
-	if (document.getElementById("goldRadial")){
-		loopDelay = 3000;
-	} else if (document.getElementsByClassName("_2xGPj").length > 0) {
-		document.getElementsByClassName("_2xGPj")[0].getElementsByTagName("defs")[0].innerHTML += '<radialGradient id="goldRadial" cx="50" cy="50" r="50" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="rgb(255,176,84)"></stop><stop offset="80%" stop-color="rgb(255,176,84)"></stop><stop offset="85%" stop-color="rgb(50,50,50)"></stop><stop offset="95%" stop-color="rgb(50,50,50)"></stop><stop offset="100%" stop-color="rgb(255,176,84)"></stop></radialGradient><radialGradient id="grayRadial" cx="50" cy="50" r="50" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="rgb(75,75,75)"></stop><stop offset="90%" stop-color="rgb(75,75,75)"></stop><stop offset="100%" stop-color="rgb(90,90,90)"></stop></radialGradient>';
-	};
-	setTimeout(function(){
-		checkSVG();
-	}, loopDelay);
-})();
-
-// ask pos x and y.
-var adjustActive = 0,
-	adjTimeout;
-function lightAdjust(as){
-	adjustActive++;
-	function lightModifier(x){
-		return ((10 * x) - 5) / (4 + (12 * Math.abs(x - 0.5))) + 0.5;
-	};
-	var now = new Date();
-	var loopDelay = 1000;
-	var sp1 = sunPosition.dawn,
-		sp2 = sunPosition.sunriseEnd,
-		sp3 = sunPosition.sunsetStart - 1800000,
-		sp4 = sunPosition.dusk,
-		dif1 = sp2 - sp1,
-		dif2 = sp4 - sp3;
-	var timeRatio = 0,
-		darkRatio = 0;
-	if (now > sp2 && now < sp3){
-		darkRatio = 0;
-		loopDelay = sp3 - now;
-	} else if (now > sp4){
-		var sp5 = sp1 + 86100000;
-		darkRatio = 1;
-		loopDelay = sp5 - now;
-	} else if (now < (sp1 - 300000)){
-		darkRatio = 1;
-		loopDelay = sp1 - now;
-	} else if (now > sp3 && now < sp4){
-		darkRatio = 1 - lightModifier(((sp4 - now) / dif2));
-	} else if (now > sp1 && now < sp2){
-		darkRatio = lightModifier(((sp2 - now) / dif1));
-	} else {
-		// error prevention
-		loopDelay = 99999999999;
-	};
-	loopDelay = loopDelay < 1000 ? 1000 : loopDelay;
-	loopDelay = loopDelay ? loopDelay : 1000;
-	lightTransition(darkRatio, as);
-	console.log("adjusting brightness, " + Math.round(darkRatio * 10000) / 100 + " % progression. Waiting " + loopDelay / 1000 + "s till next check");
-	if (adjustActive > 1){
-		adjustActive--;
-	} else {
-		adjustActive--;
-		adjTimeout = setTimeout(function(){
-			lightAdjust(as);
-		}, loopDelay);
+		td.f.setoverlayopacity(newAdj);
+		console.log("Adjusting brightness, " + (darkRatio * 10000) / 100 + " % of extra dynamic darkening applied.");
 	};
 };
 
 // keep style last
-(function toLast(){
+function toLast(){
 	var headStyles = document.head.getElementsByTagName("style");
 	if (headStyles[headStyles.length - 1].id != "TrueDarkStyle"){
 		document.head.appendChild(document.getElementById("TrueDarkStyle"));
 	};
-	setTimeout(function(){
-		toLast();
-	}, 1000);
-})();
+};
 
 // #############################################################
 // #############################################################
@@ -411,7 +397,6 @@ var PI   = Math.PI,
 
 // sun calculations are based on http://aa.quae.nl/en/reken/zonpositie.html formulas
 
-
 // date/time constants and conversions
 
 var dayMs = 1000 * 60 * 60 * 24,
@@ -421,7 +406,6 @@ var dayMs = 1000 * 60 * 60 * 24,
 function toJulian(date) { return date.valueOf() / dayMs - 0.5 + J1970; }
 function fromJulian(j)  { return new Date((j + 0.5 - J1970) * dayMs); }
 function toDays(date)   { return toJulian(date) - J2000; }
-
 
 // general calculations for position
 
@@ -467,9 +451,7 @@ function sunCoords(d) {
     };
 }
 
-
 var SunCalc = {};
-
 
 // calculates sun position for a given date and latitude/longitude
 
@@ -488,16 +470,11 @@ SunCalc.getPosition = function (date, lat, lng) {
     };
 };
 
-
 // sun times configuration (angle, morning name, evening name)
 
 var times = SunCalc.times = [
-    [-0.833, 'sunrise',       'sunset'      ],
     [  -0.3, 'sunriseEnd',    'sunsetStart' ],
-    [    -6, 'dawn',          'dusk'        ],
-    [   -12, 'nauticalDawn',  'nauticalDusk'],
-    [   -18, 'nightEnd',      'night'       ],
-    [     6, 'goldenHourEnd', 'goldenHour'  ]
+    [    -6, 'dawn',          'dusk'        ]
 ];
 
 // adds a custom time to the times config
@@ -505,7 +482,6 @@ var times = SunCalc.times = [
 SunCalc.addTime = function (angle, riseName, setName) {
     times.push([angle, riseName, setName]);
 };
-
 
 // calculations for sun times
 
@@ -525,7 +501,6 @@ function getSetJ(h, lw, phi, dec, n, M, L) {
         a = approxTransit(w, lw, n);
     return solarTransitJ(a, M, L);
 }
-
 
 // calculates sun times for a given date and latitude/longitude
 
@@ -547,10 +522,7 @@ SunCalc.getTimes = function (date, lat, lng) {
         i, len, time, Jset, Jrise;
 
 
-    var result = {
-        solarNoon: fromJulian(Jnoon),
-        nadir: fromJulian(Jnoon - 0.5)
-    };
+    var result = {};
 
     for (i = 0, len = times.length; i < len; i += 1) {
         time = times[i];
@@ -565,135 +537,6 @@ SunCalc.getTimes = function (date, lat, lng) {
     return result;
 };
 
-
-// moon calculations, based on http://aa.quae.nl/en/reken/hemelpositie.html formulas
-
-function moonCoords(d) { // geocentric ecliptic coordinates of the moon
-
-    var L = rad * (218.316 + 13.176396 * d), // ecliptic longitude
-        M = rad * (134.963 + 13.064993 * d), // mean anomaly
-        F = rad * (93.272 + 13.229350 * d),  // mean distance
-
-        l  = L + rad * 6.289 * sin(M), // longitude
-        b  = rad * 5.128 * sin(F),     // latitude
-        dt = 385001 - 20905 * cos(M);  // distance to the moon in km
-
-    return {
-        ra: rightAscension(l, b),
-        dec: declination(l, b),
-        dist: dt
-    };
-}
-
-SunCalc.getMoonPosition = function (date, lat, lng) {
-
-    var lw  = rad * -lng,
-        phi = rad * lat,
-        d   = toDays(date),
-
-        c = moonCoords(d),
-        H = siderealTime(d, lw) - c.ra,
-        h = altitude(H, phi, c.dec),
-        // formula 14.1 of "Astronomical Algorithms" 2nd edition by Jean Meeus (Willmann-Bell, Richmond) 1998.
-        pa = atan(sin(H), tan(phi) * cos(c.dec) - sin(c.dec) * cos(H));
-
-    h = h + astroRefraction(h); // altitude correction for refraction
-
-    return {
-        azimuth: azimuth(H, phi, c.dec),
-        altitude: h,
-        distance: c.dist,
-        parallacticAngle: pa
-    };
-};
-
-
-// calculations for illumination parameters of the moon,
-// based on http://idlastro.gsfc.nasa.gov/ftp/pro/astro/mphase.pro formulas and
-// Chapter 48 of "Astronomical Algorithms" 2nd edition by Jean Meeus (Willmann-Bell, Richmond) 1998.
-
-SunCalc.getMoonIllumination = function (date) {
-
-    var d = toDays(date || new Date()),
-        s = sunCoords(d),
-        m = moonCoords(d),
-
-        sdist = 149598000, // distance from Earth to Sun in km
-
-        phi = acos(sin(s.dec) * sin(m.dec) + cos(s.dec) * cos(m.dec) * cos(s.ra - m.ra)),
-        inc = atan(sdist * sin(phi), m.dist - sdist * cos(phi)),
-        angle = atan(cos(s.dec) * sin(s.ra - m.ra), sin(s.dec) * cos(m.dec) -
-                cos(s.dec) * sin(m.dec) * cos(s.ra - m.ra));
-
-    return {
-        fraction: (1 + cos(inc)) / 2,
-        phase: 0.5 + 0.5 * inc * (angle < 0 ? -1 : 1) / Math.PI,
-        angle: angle
-    };
-};
-
-
-function hoursLater(date, h) {
-    return new Date(date.valueOf() + h * dayMs / 24);
-}
-
-// calculations for moon rise/set times are based on http://www.stargazing.net/kepler/moonrise.html article
-
-SunCalc.getMoonTimes = function (date, lat, lng, inUTC) {
-    var t = new Date(date);
-    if (inUTC) t.setUTCHours(0, 0, 0, 0);
-    else t.setHours(0, 0, 0, 0);
-
-    var hc = 0.133 * rad,
-        h0 = SunCalc.getMoonPosition(t, lat, lng).altitude - hc,
-        h1, h2, rise, set, a, b, xe, ye, d, roots, x1, x2, dx;
-
-    // go in 2-hour chunks, each time seeing if a 3-point quadratic curve crosses zero (which means rise or set)
-    for (var i = 1; i <= 24; i += 2) {
-        h1 = SunCalc.getMoonPosition(hoursLater(t, i), lat, lng).altitude - hc;
-        h2 = SunCalc.getMoonPosition(hoursLater(t, i + 1), lat, lng).altitude - hc;
-
-        a = (h0 + h2) / 2 - h1;
-        b = (h2 - h0) / 2;
-        xe = -b / (2 * a);
-        ye = (a * xe + b) * xe + h1;
-        d = b * b - 4 * a * h1;
-        roots = 0;
-
-        if (d >= 0) {
-            dx = Math.sqrt(d) / (Math.abs(a) * 2);
-            x1 = xe - dx;
-            x2 = xe + dx;
-            if (Math.abs(x1) <= 1) roots++;
-            if (Math.abs(x2) <= 1) roots++;
-            if (x1 < -1) x1 = x2;
-        }
-
-        if (roots === 1) {
-            if (h0 < 0) rise = i + x1;
-            else set = i + x1;
-
-        } else if (roots === 2) {
-            rise = i + (ye < 0 ? x2 : x1);
-            set = i + (ye < 0 ? x1 : x2);
-        }
-
-        if (rise && set) break;
-
-        h0 = h2;
-    }
-
-    var result = {};
-
-    if (rise) result.rise = hoursLater(t, rise);
-    if (set) result.set = hoursLater(t, set);
-
-    if (!rise && !set) result[ye > 0 ? 'alwaysUp' : 'alwaysDown'] = true;
-
-    return result;
-};
-
-
 // export as Node module / AMD module / browser variable
 if (typeof exports === 'object' && typeof module !== 'undefined') module.exports = SunCalc;
 else if (typeof define === 'function' && define.amd) define(SunCalc);
@@ -704,5 +547,5 @@ else window.SunCalc = SunCalc;
 // #############################################################
 // #############################################################
 // #############################################################
-
+readFirst();
 initiateFuncs();

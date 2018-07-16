@@ -108,7 +108,7 @@ sheetCSS = 'body{background: black}' +
 '{text-align:center;width:100%;margin-top:10px;margin-bottom:5px;}' +
 
 '.dv' +
-'{display:inline;margin-left:10px;margin-top: 1px;float:left;width:30px;height:20px;text-align:right;border:none;background:' + pc.darkbg + ';color:' + pc.whitetext + '}' +
+'{display:inline;margin-left:10px;margin-top: 1px;float:left;width:30px;height:20px;text-align:right;border:none;background:' + pc.innerbg + ';color:' + pc.whitetext + '}' +
 
 '.geoLoc' +
 '{width: 75px;display: inline;text-align: center;background:' + pc.darkbg + ';color:' + pc.whitetext + '}' +
@@ -279,7 +279,7 @@ sheetCSS = 'body{background: black}' +
 
 	// question new word
 '.MUGWy.XV0Fl' +
-'{color:' + pc.contrasttext + ',font-weight: 700;}' +
+'{color:' + pc.contrasttext + ';font-weight: 700;}' +
 
 	// check button
 '._1cw2r' +
@@ -326,6 +326,8 @@ sheetCSS = 'body{background: black}' +
 	// picture selection
 '.a-Y8L span' + // text
 '{color:' + pc.whitetext + '}' +
+'._2GNNM._3F380 .a-Y8L span' + // selected
+'{color: rgb(0,0,0);font-weight: 900;}' +
 
 	// header
 '._1Zqmf' +
@@ -432,7 +434,7 @@ sheetCSS = 'body{background: black}' +
 
 	// new post
 '.Q3ue-._2yvtl.gFN2J,' + // title
-'.dVGCn _2yvtl gFN2J' + // content
+'.dVGCn._2yvtl.gFN2J' + // content
 '{background:' + pc.innerbg + ';color:' + pc.text + '}' +
 
 // #################################################################
