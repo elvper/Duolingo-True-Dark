@@ -251,27 +251,23 @@ function recalcobj(){
 	document.getElementsByTagName('head')[0].appendChild(scriptEle);
 })();
 
-// get stored settings
-function initiateFuncs(){
-	td.settings.old ?
-		td.f.applySettings(td.settings.old) : null;
-};
-
 // apply stored settings
 td.f.applySettings = (function(){
-	var as = td.settings.old;
-	var lightAdj = false;
-	document.getElementById("sessionDarknessValue").value = as.session < 0 ? "+" + (0 - as.session) : (0 - as.session);
-	document.getElementById("sessionDarkness").value = as.session;
-	document.getElementById("sessionDarkness").setAttribute("min", 0 - (as.day > as.night ? as.day : as.night));
-	document.getElementById("sessionDarkness").setAttribute("max", 70 - as.day);
-	document.getElementById("dayDarknessValue").value = (100 - as.day) + "%";
-	document.getElementById("dayDarkness").value = as.day;
-	document.getElementById("nightDarknessValue").value = (100 - as.night) + "%";
-	document.getElementById("nightDarkness").value = as.night;
-	document.getElementById("latitudeDarkness").value = as.latitude;
-	document.getElementById("longitudeDarkness").value = as.longitude;
-	document.getElementById("locationBasedDarkness").checked = as.locationBased ? true : false;
+	if(td.settings.old){
+		var as = td.settings.old;
+		var lightAdj = false;
+		document.getElementById("sessionDarknessValue").value = as.session < 0 ? "+" + (0 - as.session) : (0 - as.session);
+		document.getElementById("sessionDarkness").value = as.session;
+		document.getElementById("sessionDarkness").setAttribute("min", 0 - (as.day > as.night ? as.day : as.night));
+		document.getElementById("sessionDarkness").setAttribute("max", 70 - as.day);
+		document.getElementById("dayDarknessValue").value = (100 - as.day) + "%";
+		document.getElementById("dayDarkness").value = as.day;
+		document.getElementById("nightDarknessValue").value = (100 - as.night) + "%";
+		document.getElementById("nightDarkness").value = as.night;
+		document.getElementById("latitudeDarkness").value = as.latitude;
+		document.getElementById("longitudeDarkness").value = as.longitude;
+		document.getElementById("locationBasedDarkness").checked = as.locationBased ? true : false;
+	}
 });
 
 // add the svg radial definitions
@@ -281,6 +277,7 @@ td.f.checkSVG = function(){
 	};
 };
 
+// loop
 function loopfunctions(){
 	td.now = new Date().getTime();
 	td.f.checkSVG();
@@ -289,15 +286,15 @@ function loopfunctions(){
 	td.popchange = pophidden != td.pophidden;
 	td.popchange && (recalcobj());
 	if ((td.doadjust && pophidden) || td.popchange){
-		td.currentratio = lightAdjust();
+		td.currentratio = lightTransition();
 	};
 	td.pophidden = document.getElementById("TDpop").className == "hideEle";
-	
 	setTimeout(function(){
 		loopfunctions();
 	}, 1000);
 };
 
+// set the darkRatio by the moment of the day
 function calcbrightness(){
 	if (!td.doadjust){
 		darkRatio = 0;
@@ -313,21 +310,16 @@ function calcbrightness(){
 	return darkRatio;
 };
 
-// ask pos x and y.
-function lightAdjust(){
-	var darkRatio = calcbrightness();
-	lightTransition(darkRatio);
-	return darkRatio;
-};
-
 // apply ratio
-function lightTransition(darkRatio){
+function lightTransition(){
+	var darkRatio = calcbrightness();
 	if (darkRatio != td.currentratio || td.popchange){
 		var newAdj = (td.overlayopacity.day + ((td.settings.old.scale * darkRatio) / 100));
 		if (newAdj > 0.7) newAdj = 0.7;
 		td.f.setoverlayopacity(newAdj);
 		console.log("Adjusting brightness, " + (darkRatio * 10000) / 100 + " % of extra dynamic darkening applied.");
 	};
+	return darkRatio;
 };
 
 // keep style last
@@ -545,4 +537,4 @@ else window.SunCalc = SunCalc;
 // #############################################################
 // #############################################################
 readFirst();
-initiateFuncs();
+td.f.applySettings();
