@@ -12,10 +12,10 @@ var td = {};
 
 td.version = "2.0.0";
 td.f = {};
-td.f.hourstojstime = hours => hours * 3600000;
-td.f.sessionadjustment = orignal => td.sessionexpired ?
-	orignal + td.settings.old.session : original;
-td.f.setoverlayopacity = opacity => document.getElementById("TurnDownLights").setAttribute("style", "background-color: rgba(0, 0, 0, " + opacity + ");");
+td.f.hourstojstime = (hours) => hours * 3600000;
+td.f.sessionadjustment = (original) => (td.sessionexpired ?
+	(original + td.settings.old.session) : original);
+td.f.setoverlayopacity = (opacity) => document.getElementById("TurnDownLights").setAttribute("style", "background-color: rgba(0, 0, 0, " + opacity + ");");
 td.f.calclightratio = x => (((10 * x) - 5) / (4 + (12 * Math.abs(x - 0.5))) + 0.5);
 td.transitionprogress = (late, early) => ((late - td.now) / (late - early));
 
