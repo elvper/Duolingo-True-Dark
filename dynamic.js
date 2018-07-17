@@ -10,7 +10,7 @@ var fadeearlier = 0.5; // hours: how long before sunsetstart to start fading to 
 
 var td = {};
 
-td.version = "2.0.2";
+td.version = "2.0.3";
 td.f = {};
 td.f.hourstojstime = (hours) => hours * 3600000;
 td.f.sessionadjustment = (original) => (td.sessionexpired ?
@@ -20,6 +20,7 @@ td.f.calclightratio = x => (((10 * x) - 5) / (4 + (12 * Math.abs(x - 0.5))) + 0.
 td.transitionprogress = (late, early) => ((late - td.now) / (late - early));
 
 function createobj(){
+	td.countr = 0;
 	td.settings = {};
 	td.settings.old = JSON.parse(localStorage.getItem('TrueDarkSettings')) || {};
 	td.now = new Date().getTime();
@@ -317,7 +318,10 @@ function lightTransition(){
 		var newAdj = (td.overlayopacity.day + ((td.settings.old.scale * darkRatio) / 100));
 		if (newAdj > 0.7) newAdj = 0.7;
 		td.f.setoverlayopacity(newAdj);
-		console.log("Adjusting brightness, " + (darkRatio * 10000) / 100 + " % of extra dynamic darkening applied.");
+		if (td.countr++ == 0){
+			console.log("Adjusting brightness, " + (darkRatio * 10000) / 100 + " % of extra dynamic darkening applied.");
+			td.countr = 0;
+		};
 	};
 	return darkRatio;
 };

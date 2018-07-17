@@ -77,9 +77,6 @@ sheetCSS = 'body{background: black}' +
 '#TurnDownLights' +
 '{position:fixed;width:100%;height:100%;background-color:rgba(0, 0, 0, 0);top:0;left:0;z-index:9000;pointer-events:none;transition: background-color 1s;}' +
 
-'img._2PyWM::before' +
-'{content: url(moz-extension://64c985aa-152d-49d3-a8a2-f634f44127a5/crown-small-black.svg);}' +
-
 '#TrueDarkSettings' +
 '{position: fixed;top: -5px;right: -5px;z-index: 9001;color:' + pc.whitetext + ';}' +
 
