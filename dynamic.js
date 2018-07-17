@@ -5,12 +5,12 @@
 // - handle next day - get new sun position
 
 // settings
-var remembersession = 6; // hours: how long to remember session settings for
-var fadeearlier = 0.5; // hours: how long before sunset start to start fading to the night setting
+var remembersession = 6; // hours: how long to remember the session settings for
+var fadeearlier = 0.5; // hours: how long before sunsetstart to start fading to the night setting
 
 var td = {};
 
-td.version = "2.0.0";
+td.version = "2.0.1";
 td.f = {};
 td.f.hourstojstime = (hours) => hours * 3600000;
 td.f.sessionadjustment = (original) => (td.sessionexpired ?

@@ -46,30 +46,30 @@ var invert = 'filter: invert(1) hue-rotate(180deg);-webkit-filter: invert(1) hue
 	invertBright2 = 'filter: invert(1) hue-rotate(180deg) brightness(200%);-webkit-filter: invert(1) hue-rotate(180deg) brightness(300%);',
 	invertBright4 = 'filter: invert(1) hue-rotate(180deg) brightness(800%);-webkit-filter: invert(1) hue-rotate(180deg) brightness(800%)';
 
-var carousel = {};
-carousel.items = ["_2Zhvi", "_1bxGV", "egA16", "_1V-iw", "_39mwD", "_3Z4AA", "_1ceyl", "_1A-DM", "_2NEYB", "xUhKc", "_2-Fht", "VOhoZ", "GUh7N", "_22b6y", "_3tlqI", "_3c5uV", "_1ubw5", "_1iUq9"];
-carousel.opacity = [1, 0.7, 0.2, 0];
-carousel.speed = 1;
+// var carousel = {};
+// carousel.items = ["_2Zhvi", "_1bxGV", "egA16", "_1V-iw", "_39mwD", "_3Z4AA", "_1ceyl", "_1A-DM", "_2NEYB", "xUhKc", "_2-Fht", "VOhoZ", "GUh7N", "_22b6y", "_3tlqI", "_3c5uV", "_1ubw5", "_1iUq9"];
+// carousel.opacity = [1, 0.7, 0.2, 0];
+// carousel.speed = 1;
 
 var carouselCSS = "";
-for (i = 0; i < 10; i++) {
-	var ia = "." + carousel.items[i],
-		ib = ' ._1iUq9:nth-of-type(',
-		ic = '){opacity:',
-		id = pc.translate - (i * pc.itemWidth),
-		ie = ';transition: opacity ' + carousel.speed + 's;}';
-    var iCSS = ia;
-	iCSS += '{-webkit-transform: translateX(' + id + '%);-ms-transform: translateX(' + id + '%);transform: translateX(' + id + '%);}';
-	iCSS += ia + ib + (i + 1) + ic + carousel.opacity[0] + ie;		// current item
-	iCSS += i > 0 ?
-		ia + ib + i + ic + carousel.opacity[1] + ie : "";			// previous item
-	iCSS += ia + ib + (i + 2) + ic + carousel.opacity[1] + ie;		// next item
-	iCSS += i > 1 ?
-		ia + ib + (i - 1) + ic + carousel.opacity[2] + ie : "";	// in front of previous item
-	iCSS += ia + ib + (i + 3) + ic + carousel.opacity[2] + ie;		// next after next item
-	iCSS += ia + ' ._1iUq9{opacity:' + carousel.opacity[3] + ie;	// others
-	carouselCSS += iCSS;
-};
+// for (i = 0; i < 10; i++) {
+	// var ia = "." + carousel.items[i],
+		// ib = ' ._1iUq9:nth-of-type(',
+		// ic = '){opacity:',
+		// id = pc.translate - (i * pc.itemWidth),
+		// ie = ';transition: opacity ' + carousel.speed + 's;}';
+    // var iCSS = ia;
+	// iCSS += '{-webkit-transform: translateX(' + id + '%);-ms-transform: translateX(' + id + '%);transform: translateX(' + id + '%);}';
+	// iCSS += ia + ib + (i + 1) + ic + carousel.opacity[0] + ie;		// current item
+	// iCSS += i > 0 ?
+		// ia + ib + i + ic + carousel.opacity[1] + ie : "";			// previous item
+	// iCSS += ia + ib + (i + 2) + ic + carousel.opacity[1] + ie;		// next item
+	// iCSS += i > 1 ?
+		// ia + ib + (i - 1) + ic + carousel.opacity[2] + ie : "";	// in front of previous item
+	// iCSS += ia + ib + (i + 3) + ic + carousel.opacity[2] + ie;		// next after next item
+	// iCSS += ia + ' ._1iUq9{opacity:' + carousel.opacity[3] + ie;	// others
+	// carouselCSS += iCSS;
+// };
 
 var sheet = document.createElement('style');
 sheet.id = "TrueDarkStyle";
@@ -256,7 +256,10 @@ sheetCSS = 'body{background: black}' +
 '._3Utz6:hover span' + // forum profile
 '{color: ' + pc.whitetext + ' !important;}' +
 
-// ##### exercices #####
+// #################################################################
+// ########################### exercises ###########################
+// #################################################################
+
 	// introduction window
 '._3giip' + // main bg
 '{background:radial-gradient(farthest-corner at 50% 40%, ' + pc.innerbg + ', ' + pc.darkestbg + ', ' + pc.darkbg + ', ' + pc.darkerbg + ')}' +
@@ -349,14 +352,20 @@ sheetCSS = 'body{background: black}' +
 '{background:' + pc.innerbg + ';color:' + pc.text + '}' +
 
 	// exercise end carousel
-'._2HMBY' + // container
-'{width: ' + pc.carouselWidth + '%}' +
-'._1iUq9' + // carousel item
-'{width:' + pc.itemWidth + '%;opacity:' + carousel.opacity[1] + ';}' +
-'._20PKJ' + // stories text
+// '._2HMBY' + // container
+// '{width: ' + pc.carouselWidth + '%}' +
+// '._1iUq9' + // carousel item
+// '{width:' + pc.itemWidth + '%;opacity:' + carousel.opacity[1] + ';}' +
+// '._20PKJ' + // stories text
+// '{color:' + pc.whitetext + '}' +
+
+	// report text
+'._3A0q- span' +
 '{color:' + pc.whitetext + '}' +
 
-// ##### tips pages #####
+// #################################################################
+// ########################### tips pages ##########################
+// #################################################################
 
 // headers
 'h2._21sXl' +
