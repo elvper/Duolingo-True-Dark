@@ -10,7 +10,7 @@ var fadeearlier = 0.5; // hours: how long before sunsetstart to start fading to 
 
 var td = {};
 
-td.version = "2.0.5";
+td.version = "2.0.6";
 td.f = {};
 td.f.hourstojstime = (hours) => hours * 3600000;
 td.f.sessionadjustment = (original) => (td.sessionexpired ?

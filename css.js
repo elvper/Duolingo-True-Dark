@@ -348,6 +348,10 @@ sheetCSS = 'body{background: black}' +
 '._1XKSx > input' +
 '{background:' + pc.innerbg + ';color:' + pc.text + '}' +
 
+	// wrong selected
+'.challenge .challenge-answers li.grade-incorrect' +
+'{background:' + pc.wrong + '}' +
+
 	// exercise end carousel
 // '._2HMBY' + // container
 // '{width: ' + pc.carouselWidth + '%}' +
@@ -612,6 +616,10 @@ sheetCSS = 'body{background: black}' +
 // end xp ring-container
 '.ring-of-fire' +
 '{' + invertBright2 + '}' +
+
+// completed all stories message
+'.completed-all-sets-notification h2, .completed-all-sets-notification p' +
+'{color:' + pc.whitetext + '}' +
 
 // #################################################################
 // ######################### settings tab ##########################
