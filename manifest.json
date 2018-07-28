@@ -3,7 +3,7 @@
     "name": "Duolingo True Dark",
     "short_name": "DTD",
     "description": "Unoffial dark theme for Duolingo",
-    "version": "2.0.6",
+    "version": "2.1.0",
 	"author": "elvper",
     "content_scripts": [
         {
@@ -36,12 +36,7 @@
         "storage",
         "*://duolingo.com/*",
         "*://*.duolingo.com/*"
-    ],
-	"web_accessible_resources": [
-		"crown-small-black.svg",
-		"star-outlined-dark.svg",
-		"lightdark_slider.svg"
-	]
+    ]
 }
 
 
