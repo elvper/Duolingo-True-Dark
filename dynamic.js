@@ -1,8 +1,7 @@
 // to do
-// - dropdown profile stories
-// - keep wrong color in stories
 // - cog icon for pages without the resource
 // - handle next day - get new sun position
+// - reset seesion slider after session end
 
 // settings
 var remembersession = 6; // hours: how long to remember the session settings for
@@ -10,7 +9,7 @@ var fadeearlier = 0.5; // hours: how long before sunsetstart to start fading to 
 
 var td = {};
 
-td.version = "2.1.0";
+td.version = "2.1.1";
 td.f = {};
 td.f.hourstojstime = (hours) => hours * 3600000;
 td.f.sessionadjustment = (original) => (td.sessionexpired ?
@@ -27,7 +26,8 @@ function createobj(){
 	td.tomorrow = td.now + 86400000;
 	td.sessionlimit = td.f.hourstojstime(remembersession);
 	td.sessionexpired = td.settings.old.sessionLast ?
-		td.now - td.settings.old.sessionLast < td.sessionlimit : true;
+		(td.now - td.settings.old.sessionLast < td.sessionlimit) : true;
+	td.settings.old.session && (td.now - td.settings.old.sessionLast > td.sessionlimit) && (td.settings.old.session = 0);
 	td.overlayopacity = {};
 	td.overlayopacity.day = td.f.sessionadjustment(td.settings.old.day) / 100;
 	td.overlayopacity.night = td.f.sessionadjustment(td.settings.old.day) / 100;
