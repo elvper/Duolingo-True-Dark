@@ -44,7 +44,9 @@ darkicons.slider = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/s
 var invert = 'filter: invert(1) hue-rotate(180deg);-webkit-filter: invert(1) hue-rotate(180deg);',
 	invertBright = 'filter: invert(1) hue-rotate(180deg) brightness(200%);-webkit-filter: invert(1) hue-rotate(180deg) brightness(200%);',
 	invertBright2 = 'filter: invert(1) hue-rotate(180deg) brightness(200%);-webkit-filter: invert(1) hue-rotate(180deg) brightness(300%);',
-	invertBright4 = 'filter: invert(1) hue-rotate(180deg) brightness(800%);-webkit-filter: invert(1) hue-rotate(180deg) brightness(800%)';
+	invertBright4 = 'filter: invert(1) hue-rotate(180deg) brightness(800%);-webkit-filter: invert(1) hue-rotate(180deg) brightness(800%)',
+	bgGradient = 'background: radial-gradient(farthest-corner at 50% 40%, rgb(0,0,0,1), rgb(0,0,0,0.75), rgb(0,0,0,0.5), rgb(0,0,0,0.75));';
+
 
 // var carousel = {};
 // carousel.items = ["_2Zhvi", "_1bxGV", "egA16", "_1V-iw", "_39mwD", "_3Z4AA", "_1ceyl", "_1A-DM", "_2NEYB", "xUhKc", "_2-Fht", "VOhoZ", "GUh7N", "_22b6y", "_3tlqI", "_3c5uV", "_1ubw5", "_1iUq9"];
@@ -115,6 +117,9 @@ sheetCSS = 'body{background: black}' +
 
 '.locContainer' +
 '{text-align: center;}' +
+
+'.centerInput' +
+'{width: 50%;margin-left: 25%;text-align: center;background:' + pc.darkbg + ';color:' + pc.whitetext + '}' +
 
 'input[type=checkbox].popCheck' +
 '{-webkit-appearance: checkbox;top: 5px;margin-right: 5px;margin-top: 10px;}' +
@@ -260,12 +265,14 @@ sheetCSS = 'body{background: black}' +
 
 	// introduction window
 '._3giip' + // main bg
-'{background:radial-gradient(farthest-corner at 50% 40%, ' + pc.innerbg + ', ' + pc.darkestbg + ', ' + pc.darkbg + ', ' + pc.darkerbg + ')}' +
+'{' + bgGradient + '}' +
+'._3PBCS' + // bg of the bg
+'{background-image: url(https://upload.wikimedia.org/wikipedia/commons/3/3d/443823397888imajjenloka.jpg);background-size: 5px 5px;}' +
 '._1SfYc._1qCW5,' + // sort exercise question
 '._2T9b4' + // sort exercise lines
 '{background:' + pc.transparantbg + '}' +
 '._3GXmV._1sntG' + // bottom bar bg
-'{background:' + pc.innerbg + '}' +
+'{background:' + pc.darkestbg + '}' +
 '._2LZU-._3VdUV' + // text
 '{color:' + pc.text + '}' +
 '._1ujec,' + // headers
@@ -379,10 +386,13 @@ sheetCSS = 'body{background: black}' +
 '._3Fb9m._2f1i5 td' +
 '{color:' + pc.text + ' !important}' +
 
-// ##### notification #####
-'.ReactModal__Content.ReactModal__Content--after-open._1bYPb._3gvMn._3I5-U._2CNG0._2-QsC' + // background
+// ##### notifications #####
+'.ReactModal__Content.ReactModal__Content--after-open' + // background
 '{background:' + pc.darkbg + '}' +
-'._26XGQ' + // text
+'._3GdnM,' + // text main
+'._26XGQ,' + // text forum
+'._3oZIl,' + // title main
+'.Rl0dL' + // title forum
 '{color:' + pc.whitetext + '}' +
 
 // #################################################################

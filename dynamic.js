@@ -9,7 +9,7 @@ var fadeearlier = 0.5; // hours: how long before sunsetstart to start fading to 
 
 var td = {};
 
-td.version = "2.1.2";
+td.version = "2.2.2";
 td.f = {};
 td.f.hourstojstime = (hours) => hours * 3600000;
 td.f.sessionadjustment = (original) => (td.sessionexpired ?
@@ -94,7 +94,10 @@ function recalcobj(){
 		["div", 	"nighttitle",			"popExpl",		'newele["TDpop"]',				[], "Nighttime brightness"],
 		["input", 	"nightDarknessValue", 	"dv",			'newele["TDpop"]',				[["type", "text"],["disabled", true]], ""],
 		["input", 	"nightDarkness", 		"dslider",		'newele["TDpop"]',				[["type", "range"],["oninput", "updateDarkness(this)"],["min", "0"],["max", "70"],["value", "0"]], ""],
-		["div", 	"tdversion",			"popExpl",		'newele["TDpop"]',				[], ("Version: " + td.version)],
+		["hr", 		"popsplit2", 			"popSplit", 	'newele["TDpop"]', 				[], ""],
+		//["div", 	"altbg",				"popExpl",		'newele["TDpop"]',				[], "Exercise background color "],
+		//["input", 	"algbgcolor",			"centerInput",	'newele["TDpop"]',				[["type", "text"],["oninput", ""]], ""],
+		["div", 	"tdversion",			"popExpl",		'newele["TDpop"]',				[], ("Version: " + td.version)]
 	];
 	tocreate.forEach(toObj);
 
@@ -328,10 +331,14 @@ function lightTransition(){
 
 // keep style last
 function toLast(){
-	var headStyles = document.head.getElementsByTagName("style");
-	if (headStyles[headStyles.length - 1].id != "TrueDarkStyle"){
-		document.head.appendChild(document.getElementById("TrueDarkStyle"));
-	};
+	if (document.head.childNodes[document.head.childElementCount - 1].id != "TrueDarkStyle"){
+		try {
+			document.head.appendChild(document.getElementById("TrueDarkStyle"));
+			console.log("Loaded TrueDark theme last");
+		} catch(err) {
+			console.log("Failed to load TrueDark theme last");
+		};
+	}
 };
 
 // #############################################################
