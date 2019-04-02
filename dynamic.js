@@ -1,7 +1,10 @@
 // to do
 // - cog icon for pages without the resource
-// - handle next day - get new sun position
-// - reset seesion slider after session end
+// - first time use guide
+// - Choose color - dynamic color
+// - Adjust preview on settings change
+// - mobile text size option
+// - words tab
 
 // settings
 var remembersession = 6; // hours: how long to remember the session settings for
@@ -9,7 +12,7 @@ var fadeearlier = 0.5; // hours: how long before sunsetstart to start fading to 
 
 var td = {};
 
-td.version = "2.2.2";
+td.version = "2.3.6";
 td.f = {};
 td.f.hourstojstime = (hours) => hours * 3600000;
 td.f.sessionadjustment = (original) => (td.sessionexpired ?
@@ -18,10 +21,16 @@ td.f.setoverlayopacity = (opacity) => document.getElementById("TurnDownLights").
 td.f.calclightratio = x => (((10 * x) - 5) / (4 + (12 * Math.abs(x - 0.5))) + 0.5);
 td.transitionprogress = (late, early) => ((late - td.now) / (late - early));
 
+td.darkmode = true;
+
 function createobj(){
 	td.countr = 60;
 	td.settings = {};
 	td.settings.old = JSON.parse(localStorage.getItem('TrueDarkSettings')) || {};
+	
+	td.s = {};	
+	td.s.old = JSON.parse(localStorage.getItem('TrueDarkStyle')) || {};
+	
 	td.now = new Date().getTime();
 	td.tomorrow = td.now + 86400000;
 	td.sessionlimit = td.f.hourstojstime(remembersession);
@@ -53,8 +62,9 @@ function recalcobj(){
 	console.log(td);
 }
 
+// Settings menu HTML
 (function constructHTML(){
-	var tempele = document.createElement("div");
+/* 	var tempele = document.createElement("div");
 	tempele.id = "TrueDarkTheme";
 	var newele = {}, eleobjs = {};
 	toObj = arr => eleobjs[arr[1]] = {"type": arr[0], "id": arr[1], "class": arr[2], "parent": arr[3], "attr": arr[4], "inner": arr[5]};
@@ -95,8 +105,12 @@ function recalcobj(){
 		["input", 	"nightDarknessValue", 	"dv",			'newele["TDpop"]',				[["type", "text"],["disabled", true]], ""],
 		["input", 	"nightDarkness", 		"dslider",		'newele["TDpop"]',				[["type", "range"],["oninput", "updateDarkness(this)"],["min", "0"],["max", "70"],["value", "0"]], ""],
 		["hr", 		"popsplit2", 			"popSplit", 	'newele["TDpop"]', 				[], ""],
-		//["div", 	"altbg",				"popExpl",		'newele["TDpop"]',				[], "Exercise background color "],
-		//["input", 	"algbgcolor",			"centerInput",	'newele["TDpop"]',				[["type", "text"],["oninput", ""]], ""],
+		["div", 	"scaletitle",			"popExpl",		'newele["TDpop"]',				[], "Scale size"],
+		["div", 	"poplatref",			"popRef",		'newele["TDpop"]',				[], "Lat "],
+		["input", 	"forumScale",			"sizeScale",	'newele["TDpop"]',				[["type", "text"]], ""],
+		["div", 	"poplatref",			"popRef",		'newele["TDpop"]',				[], "Lat "],
+		["input", 	"exerciseScale",		"sizeScale",	'newele["TDpop"]',				[["type", "text"]], ""],
+		["hr", 		"popsplit3", 			"popSplit", 	'newele["TDpop"]', 				[], ""],
 		["div", 	"tdversion",			"popExpl",		'newele["TDpop"]',				[], ("Version: " + td.version)]
 	];
 	tocreate.forEach(toObj);
@@ -104,8 +118,43 @@ function recalcobj(){
 	for (var key in eleobjs) {
 		createEle(eleobjs[key]);
 		appendEles(eleobjs[key]);
-	};
-
+	}; */
+	
+	var tempele = document.createElement('div');
+	tempele.id = "TrueDarkTheme";
+	tempele.innerHTML = '' +
+'<div id="TurnDownLights" class="" style="background-color: rgba(0, 0, 0, 0.2);"></div>' +
+'<div id="TrueDarkSettings" class="">' +
+	'<div id="TDcog" class="cCL9P" onmouseover="javascript:void(document.getElementById(\'TDpop\').className=(\'\'),hidePop())" style=""></div>' +
+	'<div id="TDpop" class="hideEle" style="opacity:1">' +
+		'<div id="sessiontitle" class="popExpl">Session brightness</div>' +
+		'<input id="sessionDarknessValue" class="dv" type="text" disabled="true">' +
+		'<input id="sessionDarkness" class="dslider adj" type="range" oninput="updateDarkness(this)" min="-20" max="70" value="0">' +
+		'<div id="daytitle" class="popExpl">Daytime brightness</div>' +
+		'<input id="dayDarknessValue" class="dv" type="text" disabled="true">' +
+		'<input id="dayDarkness" class="dslider" type="range" oninput="updateDarkness(this)" min="0" max="70" value="0">' +
+		'<hr id="popsplit" class="popSplit"><div id="locationtitle" class="popExpl">Location for dynamic brightness</div>' +
+		'<div id="locationcontainer" class="locContainer">' +
+			'<input id="latitudeDarkness" class="geoLoc" type="text" oninput="updateDarkness(this)">' +
+			'<div id="poplongref" class="popRef">Long </div>' +
+			'<input id="longitudeDarkness" class="geoLoc" type="text" oninput="updateDarkness(this)">' +
+		'</div>' +
+		'<div id="poplatref" class="popRef">Lat </div>' +
+		'<div id="locationcheck" class="locContainer">' +
+			'<input id="locationBasedDarkness" class="popCheck" type="checkbox" oninput="updateDarkness(this)">' +
+			'<label id="locationchecklabel" class="" for="locationBasedDarkness">Enable dynamic day-night brightness?</label>' +
+		'</div>' +
+		'<div id="nighttitle" class="popExpl">Nighttime brightness</div>' +
+		'<input id="nightDarknessValue" class="dv" type="text" disabled="true">' +
+		'<input id="nightDarkness" class="dslider" type="range" oninput="updateDarkness(this)" min="0" max="70" value="0">' +
+//		'<hr id="popsplit2" class="popSplit">' +
+//		'<div id="scaletitle" class="popExpl">Scale size</div>' +
+//		'<input id="scale" class="sizeScale" type="text">' +
+		'<hr id="popsplit3" class="popSplit">' +
+		'<div id="tdversion" class="popExpl">Version: 2.3.3</div>' +
+	'</div>' +
+'</div>';
+	
 	document.body.appendChild(tempele);
 })();
 
@@ -285,7 +334,10 @@ td.f.checkSVG = function(){
 function loopfunctions(){
 	td.now = new Date().getTime();
 	td.f.checkSVG();
-	toLast();
+	
+	// remove
+	//toLast();
+	
 	var pophidden = document.getElementById("TDpop").className == "hideEle";
 	td.popchange = pophidden != td.pophidden;
 	td.popchange && (recalcobj());
