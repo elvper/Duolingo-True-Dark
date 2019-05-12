@@ -1,0 +1,134 @@
+<html style="--enabled: rgb(0,0,0);">
+
+<head>
+	<link rel="stylesheet" type="text/css" href="popup.css">
+	<script src="html5kellycolorpicker.js"></script>
+	<script src="popup.js"></script>
+</head>
+
+<body id="TD">
+<div id="TrueDarkSettings">
+	<div id="TDpop" style="opacity: 1;">
+		<svg id="enabled" class="enable" baseProfile='tiny' x='0px' y='0px' width='177px' height='202px' viewBox='-0.8 -0.5 177 202' xml:space='preserve'>
+			<path fill='none' stroke='#000' stroke-width='30' stroke-linecap='round' d='M33.7,64.3C22.1,77.2,15,94.3,15,113  c0,40.1,32.5,72.7,72.7,72.7c40.1,0,72.7-32.5,72.7-72.7c0-18.7-7.1-35.8-18.7-48.7'/>
+			<line fill='none' stroke='#000' stroke-width='30' stroke-linecap='round' x1='87.8' y1='15' x2='87.8' y2='113'/>
+		</svg>
+		
+		<div id="brightness" class="menuitem">
+			<h2 class="TDtext">Brightness</h2>
+		</div>
+		<div id="brightnessoptions">
+			<h3 class="TDtext">Session brightness (temporary)</h3>
+			<input id="sessionvalue" class="TDslidervalue" type="text" disabled="true" value="">
+			<input id="session" class="TDbrightslider" type="range" min="-20" max="70" value="0">
+			<h3 class="TDtext">Daytime brightness (permanent)</h3>
+			<input id="dayvalue" class="TDslidervalue" type="text" disabled="true" value="">
+			<input id="day" class="TDbrightslider" type="range" min="0" max="70" value="0">
+			<hr class="TDsplit">
+			<h3 class="TDtext">Location for dynamic brightness</h3>
+			<div class="TDcontainer">
+				<h4 class="TDtext TDtextdouble">Lat </h4>
+				<input id="latitude" type="text" class="TDinputdouble" value="">
+				<h4 class="TDtext TDtextdouble">Long </h4>
+				<input id="longitude" type="text" class="TDinputdouble" value="">
+			</div>
+			<button id="picklocation">Open Google maps to pick a location</button>
+			<div id="map"></div>
+			<div class="TDcontainer">
+				<input id="dynamicdaynight" type="checkbox">
+				<label for="dynamicdaynight">Enable dynamic day-night brightness?</label>
+			</div>
+			<h3 class="TDtext">Nighttime brightness</h3>
+			<input id="nightvalue" class="TDslidervalue" type="text" disabled="true" value="">
+			<input id="night" class="TDbrightslider" type="range" min="0" max="70" value="0">
+		</div>
+		
+		<hr class="TDsplit">
+		
+		<h2 class="TDtext">Customize colors</h2>
+		<div id="color">
+		
+			<button id="savecolors">Save color configuration</button>
+			<button id="restorecolors">Reset to default colors</button>
+		
+			<h3 class="TDtext">Background</h3>
+			<input id="bg.max" class="colorpicker" value="rgb(0, 0, 0)">
+			<div class="preview bg">
+				<p class="previewtext text">
+					##################################
+				</p>
+			</div>
+			<input id="bg.min" class="colorpicker" value="rgb(0, 0, 0)">
+			
+			<h3 class="TDtext">Contrast background</h3>
+			<input id="duoblue.max" class="colorpicker" value="rgb(0, 0, 0)">
+			<div class="preview duoblue">
+				<p class="previewtext textrev">
+					##################################
+				</p>
+			</div>
+			<input id="duoblue.min" class="colorpicker" value="rgb(0, 0, 0)">
+			
+			<h3 class="TDtext">Text</h3>
+			<input id="text.max" class="colorpicker" value="rgb(0, 0, 0)">
+			<div class="preview bg">
+				<p class="previewtext text">
+					##################################
+				</p>
+			</div>
+			<input id="text.min" class="colorpicker" value="rgb(0, 0, 0)">
+			
+			<h3 class="TDtext">Contrast text</h3>
+			<input id="text.contrast" class="colorpicker" value="rgb(0, 0, 0)">
+			<div class="preview bg">
+				<p class="previewtext contrast">
+					##################################
+				</p>
+			</div>
+			<input class="potato" disabled>
+			
+			<h3 class="TDtext">URL text</h3>
+			<input id="text.url" class="colorpicker" value="rgb(0, 0, 0)">
+			<div class="preview bg">
+				<p class="previewtext url">
+					##################################
+				</p>
+			</div>
+			<input class="potato" disabled>
+			
+			<h3 class="TDtext">Correct</h3>
+			<input id="correct.max" class="colorpicker" value="rgb(0, 0, 0)">
+			<div class="preview correct">
+				<p class="previewtext">
+					##################################
+				</p>
+			</div>
+			<input id="correct.min" class="colorpicker" value="rgb(0, 0, 0)">
+			
+			<h3 class="TDtext">Wrong</h3>
+			<input id="wrong.max" class="colorpicker" value="rgb(0, 0, 0)">
+			<div class="preview wrong">
+				<p class="previewtext">
+					##################################
+				</p>
+			</div>
+			<input id="wrong.min" class="colorpicker" value="rgb(0, 0, 0)">
+			
+			<h3 class="TDtext">Gold</h3>
+			<input id="gold.min" class="colorpicker" value="rgb(0, 0, 0)">
+			<div class="preview gold"></div>
+			<input id="gold.max" class="colorpicker" value="rgb(0, 0, 0)">
+			
+		</div>
+		
+		<hr class="TDsplit">
+		<h3 id="version" class="TDtext">Version: X.X.X</h3>
+		
+		
+		
+		<div class="popup-kelly-color" style="display: none; background-color: rgb(225, 225, 225); border: 1px solid rgb(191, 191, 191); box-shadow: rgba(0, 0, 0, 0.24) 7px 7px 14px -3px; border-radius: 4px; padding: 12px; box-sizing: content-box; width: 226px; height: 200px; top: 122px;"><canvas width="226" height="200" style="width: 226px; height: 200px;"></canvas></div>
+	</div>
+</div>
+</body>
+
+</html>

@@ -1,403 +1,249 @@
-// to do
-// - cog icon for pages without the resource
-// - first time use guide
-// - Choose color - dynamic color
-// - Adjust preview on settings change
-// - mobile text size option
-// - words tab
+(function(){
 
-// settings
-var remembersession = 6; // hours: how long to remember the session settings for
-var fadeearlier = 0.5; // hours: how long before sunsetstart to start fading to the night setting
+let gid = (e) => document.getElementById(e);
+let gcl = (e) => document.getElementsByClassName(e);
+let html = document.documentElement;
 
-var td = {};
+var settings = {};
+var suntimes = null;
 
-td.version = "2.3.6";
-td.f = {};
-td.f.hourstojstime = (hours) => hours * 3600000;
-td.f.sessionadjustment = (original) => (td.sessionexpired ?
-	(original + td.settings.old.session) : original);
-td.f.setoverlayopacity = (opacity) => document.getElementById("TurnDownLights").setAttribute("style", "background-color: rgba(0, 0, 0, " + opacity + ");");
-td.f.calclightratio = x => (((10 * x) - 5) / (4 + (12 * Math.abs(x - 0.5))) + 0.5);
-td.transitionprogress = (late, early) => ((late - td.now) / (late - early));
+// functions
+f = {};
 
-td.darkmode = true;
-
-function createobj(){
-	td.countr = 60;
-	td.settings = {};
-	td.settings.old = JSON.parse(localStorage.getItem('TrueDarkSettings')) || {};
-	
-	td.s = {};	
-	td.s.old = JSON.parse(localStorage.getItem('TrueDarkStyle')) || {};
-	
-	td.now = new Date().getTime();
-	td.tomorrow = td.now + 86400000;
-	td.sessionlimit = td.f.hourstojstime(remembersession);
-	td.sessionexpired = td.settings.old.sessionLast ?
-		(td.now - td.settings.old.sessionLast < td.sessionlimit) : true;
-	td.settings.old.session && (td.now - td.settings.old.sessionLast > td.sessionlimit) && (td.settings.old.session = 0);
-	td.overlayopacity = {};
-	td.overlayopacity.day = td.f.sessionadjustment(td.settings.old.day) / 100;
-	td.overlayopacity.night = td.f.sessionadjustment(td.settings.old.day) / 100;
-	td.settings.old.scale = td.settings.old.night - td.settings.old.day;
+// add brightness overlay
+f.overlay = function(){
+	var overlay = document.createElement("div");
+	overlay.id = "brightness";
+	overlay.style = "";
+	document.body.appendChild(overlay);
 };
-createobj();
+f.overlay();
 
-function continueobj(){
-	td.doadjust = td.settings.old.locationBased && td.settings.old.latitude != null && td.settings.old.longitude != null;
-	td.sunposition = td.doadjust ?
-		SunCalc.getTimes(td.now, td.settings.old.latitude, td.settings.old.longitude) : null;
-	td.sunposition && (td.sunposition.startearlier = td.sunposition.sunsetStart - td.f.hourstojstime(fadeearlier));
-};
+// change overlay opacity
+f.setoverlayopacity = (opacity) => gid("brightness").style.setProperty("background", "rgba(0, 0, 0, " + opacity + ")");
 
-function readFirst(){
-	continueobj();
-	loopfunctions();
-};
+// calculate how far between the transition of day and night
+f.sunprogress = (late, early, now) => ((late - now) / (late - early));
 
-function recalcobj(){
-	createobj();
-	continueobj();
-	console.log(td);
-}
+// calculate how much darkening to apply
+f.calclightratio = x => (((10 * x) - 5) / (4 + (12 * Math.abs(x - 0.5))) + 0.5);
 
-// Settings menu HTML
-(function constructHTML(){
-/* 	var tempele = document.createElement("div");
-	tempele.id = "TrueDarkTheme";
-	var newele = {}, eleobjs = {};
-	toObj = arr => eleobjs[arr[1]] = {"type": arr[0], "id": arr[1], "class": arr[2], "parent": arr[3], "attr": arr[4], "inner": arr[5]};
-	appendEles = obj => eval(obj.parent).appendChild(newele[obj.id]);
+// convert hours to js time (microseconds)
+f.hourstojstime = (hours) => hours * 3600000;
 
-	function createEle(obj){
-		addAttributes = objattr => newele[obj.id].setAttribute(objattr[0], objattr[1]);
-		newele[obj.id] = document.createElement(obj.type);
-		newele[obj.id].id = obj.id;
-		newele[obj.id].className = obj.class;
-		newele[obj.id].appendChild(document.createTextNode(obj.inner));
-		obj.attr.forEach(addAttributes);
-	};
+// color functions
+f.color = {
+	// Calculate point between two colors
+	calc: function (a, b, p){
+		return [0, 1, 2].map((i) => b[i] + (a[i] - b[i]) * p);
+	},
 
-	var tocreate = [
-		// type		// id					// class		// parent						// attributes, innertext
-		["div", 	"TurnDownLights", 		"", 			'tempele', 						[["style", "background-color: rgba(0, 0, 0, " + td.overlayopacity.day + ");"]], ""],
-		["div", 	"TrueDarkSettings",		"", 			'tempele', 						[], ""],
-		["div", 	"TDcog", 				"cCL9P", 		'newele["TrueDarkSettings"]', 	[["onmouseover", "javascript:void(document.getElementById('TDpop').className=(''),hidePop())"]], ""],
-		["div", 	"TDpop", 				"hideEle", 		'newele["TrueDarkSettings"]', 	[], ""],
-		["div", 	"sessiontitle",			"popExpl",		'newele["TDpop"]',				[], "Session brightness"],
-		["input", 	"sessionDarknessValue", "dv",			'newele["TDpop"]',				[["type", "text"],["disabled", true]], ""],
-		["input", 	"sessionDarkness", 		"dslider adj",	'newele["TDpop"]',				[["type", "range"],["oninput", "updateDarkness(this)"],["min", "-70"],["max", "70"],["value", "0"]], ""],
-		["div", 	"daytitle",				"popExpl",		'newele["TDpop"]',				[], "Daytime brightness"],
-		["input", 	"dayDarknessValue", 	"dv",			'newele["TDpop"]',				[["type", "text"],["disabled", true]], ""],
-		["input", 	"dayDarkness", 			"dslider",		'newele["TDpop"]',				[["type", "range"],["oninput", "updateDarkness(this)"],["min", "0"],["max", "70"],["value", "0"]], ""],
-		["hr", 		"popsplit", 			"popSplit", 	'newele["TDpop"]', 				[], ""],
-		["div", 	"locationtitle",		"popExpl",		'newele["TDpop"]',				[], "Location for dynamic brightness"],
-		["div", 	"locationcontainer",	"locContainer",	'newele["TDpop"]',				[], ""],
-		["div", 	"poplatref",			"popRef",		'newele["locationcontainer"]',	[], "Lat "],
-		["input", 	"latitudeDarkness",		"geoLoc",		'newele["locationcontainer"]',	[["type", "text"],["oninput", "updateDarkness(this)"]], ""],
-		["div", 	"poplongref",			"popRef",		'newele["locationcontainer"]',	[], "Long "],
-		["input", 	"longitudeDarkness",	"geoLoc",		'newele["locationcontainer"]',	[["type", "text"],["oninput", "updateDarkness(this)"]], ""],
-		["div", 	"locationcheck",		"locContainer",	'newele["TDpop"]',				[], ""],
-		["input", 	"locationBasedDarkness","popCheck",		'newele["locationcheck"]',		[["type", "checkbox"],["oninput", "updateDarkness(this)"]], ""],
-		["label", 	"locationchecklabel"	,"",			'newele["locationcheck"]',		[["for", "locationBasedDarkness"]], "Enable dynamic day-night brightness?"],
-		["div", 	"nighttitle",			"popExpl",		'newele["TDpop"]',				[], "Nighttime brightness"],
-		["input", 	"nightDarknessValue", 	"dv",			'newele["TDpop"]',				[["type", "text"],["disabled", true]], ""],
-		["input", 	"nightDarkness", 		"dslider",		'newele["TDpop"]',				[["type", "range"],["oninput", "updateDarkness(this)"],["min", "0"],["max", "70"],["value", "0"]], ""],
-		["hr", 		"popsplit2", 			"popSplit", 	'newele["TDpop"]', 				[], ""],
-		["div", 	"scaletitle",			"popExpl",		'newele["TDpop"]',				[], "Scale size"],
-		["div", 	"poplatref",			"popRef",		'newele["TDpop"]',				[], "Lat "],
-		["input", 	"forumScale",			"sizeScale",	'newele["TDpop"]',				[["type", "text"]], ""],
-		["div", 	"poplatref",			"popRef",		'newele["TDpop"]',				[], "Lat "],
-		["input", 	"exerciseScale",		"sizeScale",	'newele["TDpop"]',				[["type", "text"]], ""],
-		["hr", 		"popsplit3", 			"popSplit", 	'newele["TDpop"]', 				[], ""],
-		["div", 	"tdversion",			"popExpl",		'newele["TDpop"]',				[], ("Version: " + td.version)]
-	];
-	tocreate.forEach(toObj);
-
-	for (var key in eleobjs) {
-		createEle(eleobjs[key]);
-		appendEles(eleobjs[key]);
-	}; */
-	
-	var tempele = document.createElement('div');
-	tempele.id = "TrueDarkTheme";
-	tempele.innerHTML = '' +
-'<div id="TurnDownLights" class="" style="background-color: rgba(0, 0, 0, 0.2);"></div>' +
-'<div id="TrueDarkSettings" class="">' +
-	'<div id="TDcog" class="cCL9P" onmouseover="javascript:void(document.getElementById(\'TDpop\').className=(\'\'),hidePop())" style=""></div>' +
-	'<div id="TDpop" class="hideEle" style="opacity:1">' +
-		'<div id="sessiontitle" class="popExpl">Session brightness</div>' +
-		'<input id="sessionDarknessValue" class="dv" type="text" disabled="true">' +
-		'<input id="sessionDarkness" class="dslider adj" type="range" oninput="updateDarkness(this)" min="-20" max="70" value="0">' +
-		'<div id="daytitle" class="popExpl">Daytime brightness</div>' +
-		'<input id="dayDarknessValue" class="dv" type="text" disabled="true">' +
-		'<input id="dayDarkness" class="dslider" type="range" oninput="updateDarkness(this)" min="0" max="70" value="0">' +
-		'<hr id="popsplit" class="popSplit"><div id="locationtitle" class="popExpl">Location for dynamic brightness</div>' +
-		'<div id="locationcontainer" class="locContainer">' +
-			'<input id="latitudeDarkness" class="geoLoc" type="text" oninput="updateDarkness(this)">' +
-			'<div id="poplongref" class="popRef">Long </div>' +
-			'<input id="longitudeDarkness" class="geoLoc" type="text" oninput="updateDarkness(this)">' +
-		'</div>' +
-		'<div id="poplatref" class="popRef">Lat </div>' +
-		'<div id="locationcheck" class="locContainer">' +
-			'<input id="locationBasedDarkness" class="popCheck" type="checkbox" oninput="updateDarkness(this)">' +
-			'<label id="locationchecklabel" class="" for="locationBasedDarkness">Enable dynamic day-night brightness?</label>' +
-		'</div>' +
-		'<div id="nighttitle" class="popExpl">Nighttime brightness</div>' +
-		'<input id="nightDarknessValue" class="dv" type="text" disabled="true">' +
-		'<input id="nightDarkness" class="dslider" type="range" oninput="updateDarkness(this)" min="0" max="70" value="0">' +
-//		'<hr id="popsplit2" class="popSplit">' +
-//		'<div id="scaletitle" class="popExpl">Scale size</div>' +
-//		'<input id="scale" class="sizeScale" type="text">' +
-		'<hr id="popsplit3" class="popSplit">' +
-		'<div id="tdversion" class="popExpl">Version: 2.3.3</div>' +
-	'</div>' +
-'</div>';
-	
-	document.body.appendChild(tempele);
-})();
-
-// add the necessary functions to the page
-(function elementFuncs(){
-	// update settings to changes
-	function updateDarkness(ele) {
-		clearTimeout(updateSettings);
-		updateSettings = setTimeout(function(){
-			storeSettings();
-		}, 2000);
-		var dayVal = parseInt(document.getElementById("dayDarkness").value),
-			nightVal = parseInt(document.getElementById("nightDarkness").value),
-			[largeVal, smallVal] = dayVal > nightVal ?
-				[dayVal, dayVal] : [nightVal, dayVal];
-		if (ele.className == "dslider"){
-			document.getElementById(ele.id + "Value").value = (100 - parseInt(ele.value)) + "%";
-			document.getElementById("TurnDownLights").setAttribute("style", "background-color: rgba(0, 0, 0, " + (parseInt(ele.value) / 100) + ");");
-				
-			// set session adjustment range
-			var sessionslider = document.getElementById("sessionDarkness");
-			sessionslider.setAttribute("min", 0 - largeVal);
-			sessionslider.setAttribute("max", 70 - smallVal);
-			sessionslider.value = 0;
-			document.getElementById("sessionDarknessValue").value = 0;
-			newSetting.session = 0;
-			if (ele.id == "dayDarkness"){
-				document.getElementById("nightDarkness").setAttribute("min", ele.value);
-				if (!(nightVal >= dayVal)){
-					document.getElementById("nightDarknessValue").value = (100 - parseInt(ele.value)) + "%";
-					newSetting.night = parseInt(ele.value);
-				};
-			};
+	// Color range n between 2 RGB values a and b
+	range: function (a, b, n){
+		a = sf.rgbsplit(a);
+		b = sf.rgbsplit(b);
+		var cRange = [];
+		for (i = 0; i < n; i++){
+			cRange[i] = sf.rgbjoin(sf.color.calc(a, b, i / (n - 1)));
 		};
-		if (ele.id == "locationBasedDarkness"){
-			newSetting[ele.id.replace("Darkness", "")] = ele.checked;
-		} else {
-			newSetting[ele.id.replace("Darkness", "")] = parseInt(ele.value);
-		};
-		if (ele.id == "sessionDarkness"){
-			var eleVal = parseInt(ele.value) < 0 ? "+" + (-parseInt(ele.value)) : (-parseInt(ele.value));
-			document.getElementById(ele.id + "Value").value = eleVal;
-			document.getElementById("TurnDownLights").setAttribute("style", "background-color: rgba(0, 0, 0, " + ((dayVal + parseInt(ele.value)) / 100) + ");");
-			newSetting.sessionLast = new Date() - 0;
-		};
-	};
-		
-	// hide the settings menu
-	function hidePop(){
-		if (popOpen == 0){
-			popOpen = 1;
-			document.addEventListener("mousemove", setOpacity = function calcOpacity(e) {
-				function removeListener(){
-					storeSettings();
-					document.getElementById("TDcog").setAttribute("style", "");
-					popOpen = 0;
-					document.removeEventListener("mousemove", setOpacity);
-				};
-				if (document.getElementById("TDpop").className == ""){
-					document.getElementById("TDcog").setAttribute("style", "opacity:1;");
-					var mouse = {},
-						opacity = 1,
-						ratio = 200,
-						popEle = document.getElementById("TDpop"),
-						ele = popEle.getBoundingClientRect();
-					
-					mouse.x = e.clientX;
-					mouse.y = e.clientY;
-					
-					ele.xp = mouse.x < ele.left ?
-						ele.left : mouse.x < ele.right ?
-							mouse.x: ele.right;
-					ele.yp = mouse.y > ele.bottom ?
-						ele.bottom : mouse.y > ele.top ?
-							mouse.y : ele.top;
-							
-					if (Math.abs(ele.xp - mouse.x) > opacity * ratio || Math.abs(ele.yp - mouse.y) > opacity * ratio){
-						document.getElementById("TDpop").className = "hideEle";
-						ele.opacity = opacity;
-						popEle.setAttribute("style", "opacity:" + ele.opacity);
-						removeListener();
-					} else if (ele.xp == mouse.x && ele.yp == mouse.y){
-						ele.opacity = opacity;
-					} else if (ele.xp == mouse.x){
-						ele.opacity = opacity - (Math.abs(ele.yp - mouse.y)/ratio);
-					} else if (ele.yp == mouse.y){
-						ele.opacity = opacity - (Math.abs(ele.xp - mouse.x)/ratio);
-					} else {
-						ele.opacity = opacity -	Math.sqrt((ele.xp - mouse.x) ** 2 + (ele.yp - mouse.y) ** 2) / ratio;
-					};
-					
-					popEle.setAttribute("style", "opacity:" + ele.opacity);
-				} else {
-					removeListener();
-					alert("event listener failed to stop #1");
-				};
-			});
-		};
-	};
-
-	// save changes to the settings in local storage
-	function storeSettings(){
-		try {
-			var interSS = JSON.parse(localStorage.getItem('TrueDarkSettings'));
-			storedSettings = interSS ? interSS : {};
-		} catch(err) {};
-		
-		newSetting.latitude = typeof newSetting.latitude != "number" ?
-			null : newSetting.latitude > 90 ?
-				null : newSetting.latitude < -90 ?
-					null : newSetting.latitude;
-		newSetting.longitude = typeof newSetting.longitude != "number" ?
-			null : newSetting.longitude > 180 ?
-				null : newSetting.longitude < -180 ?
-					null : newSetting.longitude;
-					
-		var TDsettings = {};
-			TDsettings.session = newSetting.session != null ?
-				newSetting.session : storedSettings.session != null ?
-					storedSettings.session : 0;
-			TDsettings.sessionLast = newSetting.sessionLast != null ?
-				newSetting.sessionLast : storedSettings.sessionLast != null ?
-					storedSettings.sessionLast : 0;
-			TDsettings.day = newSetting.day != null ?
-				newSetting.day : storedSettings.day != null ?
-					storedSettings.day : 0;
-			TDsettings.night = newSetting.night != null ?
-				newSetting.night : storedSettings.night != null ?
-					storedSettings.night : 0;
-			TDsettings.latitude = newSetting.latitude != null ?
-				newSetting.latitude : storedSettings.latitude != null ?
-					storedSettings.latitude : null;
-			TDsettings.longitude = newSetting.longitude != null ?
-				newSetting.longitude : storedSettings.longitude != null ?
-					storedSettings.longitude : null;
-			TDsettings.locationBased = newSetting.locationBased != null ?
-				newSetting.locationBased : storedSettings.locationBased != null ?
-					storedSettings.locationBased : false;
-		
-		localStorage.setItem('TrueDarkSettings', JSON.stringify(TDsettings));
-	};
-
-	// add element functions to the page
-	var scriptEle = document.createElement('script');
-		scriptEle.type = "text/javascript";
-		scriptEle.appendChild(document.createTextNode(hidePop + updateDarkness + storeSettings + "var newSetting = {};newSetting.session = null;newSetting.sessionLast = null;newSetting.day = null;newSetting.night = null;newSetting.latitude = null;newSetting.longitude = null;newSetting.locationBased = null;var popOpen = 0;var goBack;var updateSettings;var storedSettings;"));
-	document.getElementsByTagName('head')[0].appendChild(scriptEle);
-})();
-
-// apply stored settings
-td.f.applySettings = (function(){
-	if(td.settings.old){
-		var as = td.settings.old;
-		var lightAdj = false;
-		document.getElementById("sessionDarknessValue").value = as.session < 0 ? "+" + (0 - as.session) : (0 - as.session);
-		document.getElementById("sessionDarkness").value = as.session;
-		document.getElementById("sessionDarkness").setAttribute("min", 0 - (as.day > as.night ? as.day : as.night));
-		document.getElementById("sessionDarkness").setAttribute("max", 70 - as.day);
-		document.getElementById("dayDarknessValue").value = (100 - as.day) + "%";
-		document.getElementById("dayDarkness").value = as.day;
-		document.getElementById("nightDarknessValue").value = (100 - as.night) + "%";
-		document.getElementById("nightDarkness").value = as.night;
-		document.getElementById("latitudeDarkness").value = as.latitude;
-		document.getElementById("longitudeDarkness").value = as.longitude;
-		document.getElementById("locationBasedDarkness").checked = as.locationBased ? true : false;
+		return cRange;
 	}
+};
+
+// catch popup messages
+f.receiver = function(){
+	chrome.runtime.onMessage.addListener(function(request, sender, sendResponse){
+		if(request.data.target == "dynamic"){
+			//console.log(request.data);
+			sendResponse({data: request.data.target, success: true});
+			f.preview[request.data.payload.type](request.data.payload.data);
+		};
+	});
+};
+f.receiver();
+
+var conversion = {
+	bg: {n: 5, refs: ["mainbg", "darkestbg", "darkbg", "darkerbg", "secondarybg"]},
+	duoblue: {n: 3, refs: ["duoblue", "darkblue", "darkestblue"]},
+	text: {n: 3, refs: ["maintext", "lightertext", "lighttext"]},
+	correct: {n: 3, refs: ["correctlight", "correct", "correctdark"]},
+	wrong: {n: 2, refs: ["wrong", "wrongdark"]},
+	gold: {n: 2, refs: ["goldlight", "golddark"]}
+};
+
+// preview unsaved changes
+f.preview = {
+	color: function(data){
+		if("min" in data[data.type]){
+			var range = f.color.range(data[data.type].min, data[data.type].max, conversion[data.type].n);
+			var countr = 0;
+			for (var i = 0; i < conversion[data.type].refs.length; i++) {
+				html.style.setProperty("--" + conversion[data.type].refs[i], range[i]);
+			}
+		}
+	},
+	
+	enable: function(data){
+		html.setAttribute("mode", data);
+	},
+	
+	brightness: function(data){
+		settings.lastsession = new Date().getTime();
+		if(data.slider == "session"){
+			settings.brightness.session = data.settings.session;
+			clearTimeout(recalcbrightness);
+			f.calcbrightness();
+		} else if (data.slider == "day"){
+			settings.brightness.day = data.settings.day;
+			settings.brightness.night = data.settings.night;
+			settings.brightness.session = data.settings.session;
+			clearTimeout(recalcbrightness);
+			f.setoverlayopacity(1 - data.settings.day);
+			recalcbrightness = setTimeout(function(){f.calcbrightness()}, 3000);
+		} else if (data.slider == "night"){
+			settings.brightness.night = data.settings.night;
+			settings.brightness.session = data.settings.session;
+			clearTimeout(recalcbrightness);
+			f.setoverlayopacity(1 - data.settings.night);
+			recalcbrightness = setTimeout(function(){f.calcbrightness()}, 3000);
+		};
+	}
+};
+
+f.getsettings = function(){
+	chrome.storage.sync.get("TDsettings", function(obj) {
+		// update default settings with stored ones
+		if(obj.TDsettings) {
+			Object.assign(settings, JSON.parse(obj.TDsettings));
+		};
+	});
+};
+
+var recalcbrightness;
+var recalccounter = 0;
+f.calcbrightness = function(){
+	//console.log("DTC (dynamic.js): recalculating brightness");
+	clearTimeout(recalcbrightness);
+	var now = new Date().getTime(),
+		opacity = null, // opacity of overlay (as brightness)
+		daypart = null, // moment of the day
+		timeout = 1000; // default brightness recalculation rate
+	var sessionexpired = now - settings.lastsession > settings.remembersession;
+	// no session adjustment if session expired
+	var sessionadj = sessionexpired ? 0 : settings.brightness.session;
+	// add session adjustment to day value (can't be more than 1)
+	var day = Math.min(1, settings.brightness.day - sessionadj);
+	// add session adjustment to night value (can't be less than 0.3)
+	var night = Math.max(0.3, settings.brightness.night - sessionadj);
+	// opacity to brightness %
+	var brightnesspct = () => ((1 - opacity) * 100).toFixed(2) + " %.";
+	// if dynamic brightness is enabled
+	if(settings.brightness.dynamic && day != night){
+		// get the times of sunrise and sunset
+		var fadeearlier = suntimes.sunsetStart - f.hourstojstime(settings.brightness.fadeearlier);
+		recalccounter++;
+		
+		// darkening ratio based on the time of the day
+		if (now > suntimes.sunriseEnd && now < fadeearlier){
+			daypart = "daylight";
+			opacity = 1 - day;
+			timeout = fadeearlier - now; // recalculate at sundown
+			recalccounter = 1;
+		} else if (now > suntimes.dusk || now < suntimes.dawn){
+			daypart = "night";
+			opacity = 1 - night;
+			tomorrowdawn = SunCalc.getTimes(now + 86400000, settings.userinput.latitude, settings.userinput.longitude).dawn;
+			timeout = tomorrowdawn - now; // recalculate at sunrise
+			recalccounter = 1;
+		} else if (now > fadeearlier && now < suntimes.dusk){
+			daypart = "sundown";
+			var darkRatio = f.calclightratio(f.sunprogress(suntimes.dusk, fadeearlier, now));
+			opacity = 1 - (night + darkRatio * (day - night));
+		} else if (now > suntimes.dawn && now < suntimes.sunriseEnd){
+			daypart = "sunrise";
+			var darkRatio = f.calclightratio(1 - f.sunprogress(suntimes.sunriseEnd, suntimes.dawn, now));
+			opacity = 1 - (night + darkRatio * (day - night));
+		};
+		
+		// print the dynamic brightness applied to console
+		if (recalccounter % 60 === 1){
+			console.log("DTC (dynamic.js): " + daypart + ", brightness set to " + brightnesspct());
+		};
+		// set timeout for next calculation
+		recalcbrightness = setTimeout(function(){f.calcbrightness()}, timeout);
+		// apply brightness by setting the opacity of the overlay
+		f.setoverlayopacity(opacity);
+	} else {
+		// if dynamic brightness is disabled just apply the day setting (adjusted to session)
+		f.setoverlayopacity(1 - day);
+	};
+};
+
+
+
+
+
+
+
+
+
+
+// initial page load
+chrome.storage.sync.get("TDsettings", function(obj) {
+	// update default settings with stored ones
+	if(obj.TDsettings) {
+		Object.assign(settings, JSON.parse(obj.TDsettings));
+	};
+	suntimes = SunCalc.getTimes(
+		new Date().getTime(),
+		settings.userinput.latitude,
+		settings.userinput.longitude
+	);
+	console.log(suntimes);
+	f.calcbrightness();
 });
 
-// add the svg radial definitions
-td.f.checkSVG = function(){
-	if (!document.getElementById("goldRadial") && document.getElementsByClassName("_2xGPj").length > 0){
-		document.getElementsByClassName("_2xGPj")[0].getElementsByTagName("defs")[0].innerHTML += '<radialGradient id="goldRadial" cx="50" cy="50" r="50" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="rgb(255,176,84)"></stop><stop offset="80%" stop-color="rgb(255,176,84)"></stop><stop offset="85%" stop-color="rgb(50,50,50)"></stop><stop offset="95%" stop-color="rgb(50,50,50)"></stop><stop offset="100%" stop-color="rgb(255,176,84)"></stop></radialGradient><radialGradient id="grayRadial" cx="50" cy="50" r="50" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="rgb(75,75,75)"></stop><stop offset="90%" stop-color="rgb(75,75,75)"></stop><stop offset="100%" stop-color="rgb(90,90,90)"></stop></radialGradient>';
-	};
-};
 
-// loop
-function loopfunctions(){
-	td.now = new Date().getTime();
-	td.f.checkSVG();
-	
-	// remove
-	//toLast();
-	
-	var pophidden = document.getElementById("TDpop").className == "hideEle";
-	td.popchange = pophidden != td.pophidden;
-	td.popchange && (recalcobj());
-	if ((td.doadjust && pophidden) || td.popchange){
-		td.currentratio = lightTransition();
-	};
-	td.pophidden = document.getElementById("TDpop").className == "hideEle";
-	setTimeout(function(){
-		loopfunctions();
-	}, 1000);
-};
 
-// set the darkRatio by the moment of the day
-function calcbrightness(){
-	if (!td.doadjust){
-		darkRatio = 0;
-	} else if (td.now > td.sunposition.sunriseEnd && td.now < td.sunposition.startearlier){
-		darkRatio = 0;
-	} else if (td.now > td.sunposition.dusk || td.now < td.sunposition.dawn){
-		darkRatio = 1;
-	} else if (td.now > td.sunposition.startearlier && td.now < td.sunposition.dusk){
-		darkRatio = 1 - td.f.calclightratio(td.transitionprogress(td.sunposition.dusk, td.sunposition.startearlier));
-	} else if (td.now > td.sunposition.dawn && td.now < td.sunposition.sunriseEnd){
-		darkRatio = td.f.calclightratio(td.transitionprogress(td.sunposition.sunriseEnd, td.sunposition.dawn));
-	};
-	return darkRatio;
-};
 
-// apply ratio
-function lightTransition(){
-	var darkRatio = calcbrightness();
-	if (darkRatio != td.currentratio || td.popchange){
-		var newAdj = (td.overlayopacity.day + ((td.settings.old.scale * darkRatio) / 100));
-		if (newAdj > 0.7) newAdj = 0.7;
-		td.f.setoverlayopacity(newAdj);
-		if (td.countr++ == 60){
-			console.log("Adjusting brightness, " + (darkRatio * 10000) / 100 + " % of extra dynamic darkening applied.");
-			td.countr = 0;
-		};
-	};
-	return darkRatio;
-};
 
-// keep style last
-function toLast(){
-	if (document.head.childNodes[document.head.childElementCount - 1].id != "TrueDarkStyle"){
-		try {
-			document.head.appendChild(document.getElementById("TrueDarkStyle"));
-			console.log("Loaded TrueDark theme last");
-		} catch(err) {
-			console.log("Failed to load TrueDark theme last");
-		};
-	}
-};
 
-// #############################################################
-// #############################################################
-// #############################################################
-// #############################################################
-// #############################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // #############################################################
 // ####################### suncalc #############################
@@ -596,8 +442,23 @@ else window.SunCalc = SunCalc;
 
 }());
 
-// #############################################################
-// #############################################################
-// #############################################################
-readFirst();
-td.f.applySettings();
+})();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
